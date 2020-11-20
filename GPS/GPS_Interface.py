@@ -3,15 +3,20 @@ from serial import tools
 from threading import *
 from math import radians, cos, sin, asin, atan, sqrt
 
-class GPS(Thread):
+class GPS_Interface(Thread):
 
     data_queue = []
     NMEA_VALID_COMMANDS = ["GPGLL", "GPRMC", "GPTRF", "GPVBW", "GPVTG"]
     KNOTS_TO_KM = 1.852
     RADIUS_OF_EARTH = 6371
 
-    def __init__(self, loc: str, baud: int):
-        self.gps_serial = Serial(loc, baud)
+    def __init__(self, loc: str = '/dev/ttyACM0', baud: int = 4800):
+        self.gps_serial = Serial()
+        self.gps_serial.port = loc
+        self.gps_serial.baudrate = baud
+
+        super(GPS_Interface, self).__init__()
+
         self.latitude = 0
         self.longitude = 0
         self.altitude = 0
@@ -24,33 +29,38 @@ class GPS(Thread):
 
         self.running = True
 
-        if not self.gps_serial.isOpen():
-            self.gps_serial.open()
-
-        self.gps_worker = self.worker(self.gps_serial)
 
     # --- Parsing thread ---
 
     def run(self) -> None:
-        while self.running:
-            data = str.split(self.ser.readline().__str__(), ",")
-            command = data.pop()
+        self.gps_serial.open()
 
-            if command is "GPGGA":
+        for i in range(0, 7): # first few lines are bs
+            self.gps_serial.readline()
+
+        while self.running:
+            data = str(self.gps_serial.readline()).replace("'", "").replace("b", "").split(",")
+            command = data.pop(0)
+
+            if command == "$GPGGA":
                 self.parse_GGA(data)
-            elif command is "GPGLL":
+            elif command == "$GPGLL":
                 self.parse_GGL(data)
-            elif command is "GPRMC":
+                print("GGL")
+            elif command == "$GPRMC":
                 self.parse_RMC(data)
-            elif command is "GPTRF":
+                print("RMC")
+            elif command == "$GPTRF":
                 self.parse_TRF(data)
-            elif command is "GPVBW":
+            elif command == "$GPVBW":
                 self.parse_VBW(data)
-            elif command is "GPVTG":
+            elif command == "$GPVTG":
                 self.parse_VTG(data)
             else:
                 pass
                 # un-necessary command sentence
+
+        self.gps_serial.close()
 
     # --- Calculation functions ---
 
@@ -64,54 +74,51 @@ class GPS(Thread):
 
         a = sin(delta_lat/2)**2 + cos(lat1) * cos(lat2) * sin(delta_lon/2)
         c = 2 * asin(sqrt(a))
-        return c * GPS.RADIUS_OF_EARTH
+        return c * GPS_Interface.RADIUS_OF_EARTH
 
     def convert_min_to_decimal(self, position: str) -> float:
         # Converts the position in time into degrees
+        temp = position.split(".")
+        before = list(temp[0])
 
-        temp = list(position)
-        degree = int(str.join(temp[0], temp[1]))
-        minutes = int(str.join(temp[2], temp[3]))
-        seconds = int(str.join(temp[4], temp[5]))
+        if before[0] == '0':
+            before.remove('0')
 
-        return degree + minutes/60 + seconds/3600
+        degrees = float(before[0] + before[1])
+        minutes = float(before[2] + before[3] + "." + temp[1])
+
+        return degrees + minutes / 60
 
     # --- Parsing functions ---
     # there is more information to parse, to-do later, these are the essentials
 
     def parse_GGA(self, data: list):
-        if data.__len__() > 8:
-            self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] else -1)
-            self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] else -1)
-            self.altitude = float(data[8])
+        self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] == 'N' else -1)
+        self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
+        self.altitude = float(data[8])
 
     def parse_GGL(self, data: list):
-        if data.__len__() > 6:
-            if data[6] is 'A':
-                self.latitude = self.convert_min_to_decimal(data[0]) * (1 if data[1] else -1)
-                self.longitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] else -1)
+        print(data[0], data[2])
+        self.latitude = self.convert_min_to_decimal(data[0]) * (1 if data[1] == 'N' else -1)
+        self.longitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'E' else -1)
 
     def parse_RMA(self, data: list):
-        if data.__len__() > 7:
-            if data[0] is 'A':
-                self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] else -1)
-                self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] else -1)
-                self.ground_speed = float(data[7]) * GPS.KNOTS_TO_KM
+        if data[0] == 'A':
+            self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] == 'N' else -1)
+            self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
+            self.ground_speed = float(data[7]) * GPS_Interface.KNOTS_TO_KM
 
     def parse_RMC(self, data: list):
-        if data.__len__() > 6:
-            self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] else -1)
-            self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] else -1)
-            self.ground_speed = float(data[6]) * GPS.KNOTS_TO_KM
+        self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
+        self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
+        self.ground_speed = float(data[6]) * GPS_Interface.KNOTS_TO_KM
 
     def parse_TRF(self, data: list):
-        if data.__len__() > 5:
-            self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] else -1)
-            self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] else -1)
+        self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
+        self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
 
     def parse_VBW(self, data: list):
-        if data.__len__() > 4:
-            self.ground_speed = float(data[4]) * GPS.KNOTS_TO_KM
+        self.ground_speed = float(data[4]) * GPS_Interface.KNOTS_TO_KM
 
     def parse_VTG(self, data: list):  # this may not be necessary
         pass
