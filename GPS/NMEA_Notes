@@ -1,0 +1,120 @@
+NMEA Notes:
+Source : http://aprs.gids.nl/nmea/
+
+GPGGA - GPS fix data
+    - time
+    - latitude
+    - longitude
+    - fix quality
+    - number of sats in view
+    - relative accuracy
+    - altitude
+    - time since connection
+    - checksum
+    - WGS84 Ellipsoid
+
+    ex. GPGGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx
+
+        hhmmss.ss = UTC of position
+        llll.ll = latitude of position
+        a = N or S
+        yyyyy.yy = Longitude of position
+        a = E or W
+        x = GPS Quality indicator (0=no fix, 1=GPS fix, 2=Dif. GPS fix)
+        xx = number of satellites in use
+        x.x = horizontal dilution of precision
+        x.x = Antenna altitude above mean-sea-level
+        M = units of antenna altitude, meters
+        x.x = Geoidal separation
+        M = units of geoidal separation, meters
+        x.x = Age of Differential GPS data (seconds)
+        xxxx = Differential reference station ID
+
+GPGLL - geographical position
+    - latitude
+    - longitude
+    - time
+    - valid data
+
+    ex. GPGLL,lll.ll,a,yyyyy.yy,a,hhmmss.ss,A llll.ll = Latitude of position
+
+        a = N or S
+        yyyyy.yy = Longitude of position
+        a = E or W
+        hhmmss.ss = UTC of position
+        A = status: A = valid data
+
+GPRMC - Recommended min specific GPS/transit data
+    - time
+    - warning
+    - latitude
+    - longitude
+    - speed over ground (knots)
+    - magnetic variation
+
+    ex. $GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70
+              1    2    3    4    5     6    7    8      9     10  11 12
+
+          1   220516     Time Stamp
+          2   A          validity - A-ok, V-invalid
+          3   5133.82    current Latitude
+          4   N          North/South
+          5   00042.24   current Longitude
+          6   W          East/West
+          7   173.8      Speed in knots
+          8   231.8      True course
+          9   130694     Date Stamp
+          10  004.2      Variation
+          11  W          East/West
+          12  *70        checksum
+
+GPTRF - transit fix data
+    - date time
+    - latitude
+    - longitude
+
+    ex. GPTRF,hhmmss.ss,xxxxxx,llll.ll,a,yyyyy.yy,a,x.x,x.x,x.x,x.x,xxx
+
+        hhmmss.ss = UTC of position fix
+        xxxxxx = Date: dd/mm/yy
+        llll.ll,a = Latitude of position fix, N/S
+        yyyyy.yy,a = Longitude of position fix, E/W
+        x.x = Elevation angle
+        x.x = Number of iterations
+        x.x = Number of Doppler intervals
+        x.x = Update distance, nautical miles
+        x.x = Satellite ID
+
+GPVBW - Dual ground/water speed
+    - longitudinal water speed (knots)
+    - transverse water speed (knots)
+    - longitudinal ground speed (knots)
+    - transverse ground speed (knots)
+
+    ex. GPVBW,x.x,x.x,A,x.x,x.x,A
+
+        x.x = Longitudinal water speed, knots
+        x.x = Transverse water speed, knots
+        A = Status: Water speed, A = Data valid
+        x.x = Longitudinal ground speed, knots
+        x.x = Transverse ground speed, knots
+        A = Status: Ground speed, A = Data valid
+
+GPVTG - Track made good and ground speed
+    - track, true
+    - track, magnetic
+    - ground speed (knots)
+    - ground speed (km)
+
+    ex. GPVTG,t,T,,,s.ss,N,s.ss,K*hh
+
+        1    = Track made good
+        2    = Fixed text 'T' indicates that track made good is relative to true north
+        3    = not used
+        4    = not used
+        5    = Speed over ground in knots
+        6    = Fixed text 'N' indicates that speed over ground in in knots
+        7    = Speed over ground in kilometers/hour
+        8    = Fixed text 'K' indicates that speed over ground is in kilometers/hour
+        9    = Checksum
+
