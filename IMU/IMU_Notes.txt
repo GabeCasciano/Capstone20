@@ -1,0 +1,45 @@
+__init__:
+	Parameters:
+		loc - location of the IMU serial port in the computer
+		baud - baud rate of the serial port
+
+run:
+	Parameters:
+		None
+	
+	Process:
+		- if running boolean is true the thread will continue to run
+		- Reads the data stream from the IMU over serial
+		- parses the sentence into its data components 
+		- updates the class
+
+do_velocity_logger():
+	Parameters:
+		None
+	Returns:
+		None
+
+get_linear_acceleration:
+	Parameters:
+		None
+	Returns:
+		[x_accel, y_accel, z_accel]
+
+get_rotational_orientation:
+	Parameters:
+		None
+	Returns:
+		[roll, pitch, yaw]
+
+get_angular_velocity:
+	Parameters:
+		None
+	Returns:
+		[roll_vel, pitch_vel, yaw_vel]
+
+get_linear_velocity:
+	Parameters:
+		None
+	Returns:
+		[x_vel, y_vel, z_vel]
+
