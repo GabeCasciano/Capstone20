@@ -14,10 +14,7 @@ if __name__ == "__main__":
     going = True
     while going:
         temp = ser.read(1)
-        val = int.from_bytes(temp, "big")
+        val = hex(int.from_bytes(temp,byteorder='little'))
         print(val)
-
-        if chr(val) == ';':
-            going = False
 
     ser.close()

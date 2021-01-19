@@ -8,20 +8,38 @@ run:
 		None
 	
 	Process:
-		- if running boolean is true the thread will continue to run
-		- Reads the data stream from the IMU over serial
-		- parses the sentence into its data components 
-		- updates the class
+		- collects a data word
+		- selects the correct parse function
+		- calls the velocity logger
 
-do_velocity_logger():
+parse_lin_accel, parse_angular_vel, parse_angular_pos:
+	(internal function, called by run)
+	Parameters:
+		- data_word
+	
+	Process:
+		- parses the data_word and updates the corresponding variables
+
+	Returns:
+		None
+
+do_velocity_logger:
+	(internal function, called by run)
 	Parameters:
 		None
+	
+	Process:
+		- calculates the velocity via acceleration intergral
+
 	Returns:
 		None
 
 get_linear_acceleration:
 	Parameters:
 		None
+
+	Process:
+		- Reads 
 	Returns:
 		[x_accel, y_accel, z_accel]
 
