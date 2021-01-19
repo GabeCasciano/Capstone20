@@ -43,7 +43,7 @@ get_linear_acceleration:
 	Returns:
 		[x_accel, y_accel, z_accel]
 
-get_rotational_orientation:
+get_angular_orientation:
 	Parameters:
 		None
 	Returns:
