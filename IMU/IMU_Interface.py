@@ -44,6 +44,9 @@ class IMU_Interface(Thread):
             self.do_velocity_logger()
             data_word = []
 
+    def stop_thread():
+        self.running = False
+
     # --- Parsing Functions ---
     def parse_lin_accel(self, data:str):
         check_sum = sum(data)
