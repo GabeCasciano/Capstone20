@@ -62,6 +62,9 @@ class GPS_Interface(Thread):
 
         self.gps_serial.close()
 
+    def stop_thread(self):
+        self.running = False
+
     # --- Calculation functions ---
 
     def harversin(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
