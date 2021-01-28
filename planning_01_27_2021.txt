@@ -1,0 +1,21 @@
+Testing:
+	1. ensure every function outputs a value
+	2. double check the zeroing functions work (if applies)
+	3. double check the calculations work
+	4. Plot output data over a set period of time, or output to file
+	5. Display and Control UI (Tk)
+		i. requires everything to be packaged properly so imports work
+	
+General:
+	1. System Diagram
+		i. hardware
+		ii. software (object diagram)
+	2. Class Diagram
+	3. State Diagram & Sequence Diagrams (define the functionality)
+		i. sensors & sensor fusion
+		ii. path planning
+		iii. obstacle detection & avoidance
+		iv. Macro scale algorithm
+	4. Activity Diagram
+
+	tools: Violet UML
