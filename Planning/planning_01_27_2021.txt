@@ -1,3 +1,6 @@
+* Need to setup each sensor as a singleton, if the port is already busy DO NOT START !!!
+* Need to add 2D velocity, 2D distance calculations, 2D bearing (deg or rads), convert decimal to minute to GPS library
+
 Testing:
 	1. ensure every function outputs a value
 	2. double check the zeroing functions work (if applies)
@@ -9,12 +12,13 @@ Testing:
 General:
 	1. System Diagram
 		i. hardware
-		ii. software (object diagram)
+		ii. software (object diagram, 50% done) 
 	2. Class Diagram
 	3. State Diagram & Sequence Diagrams (define the functionality)
-		i. sensors & sensor fusion
-		ii. path planning
-		iii. obstacle detection & avoidance
+		i. general state machine (done) 
+		ii. sensors & sensor fusion
+		iii. path planning
+		iv. obstacle detection & avoidance
 		iv. Macro scale algorithm
 	4. Activity Diagram
 
