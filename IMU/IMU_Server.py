@@ -5,7 +5,7 @@ import atexit
 
 class IMU_Server(Thread):
 
-    def __init__(self, loc:str = None, baud:int=None, port:int=8001):
+    def __init__(self, loc:str = '/dev/ttyUSB0', baud:int=115200, port:int=8001):
         self.imu = IMU_Interface(loc, baud)
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.port = port
@@ -78,6 +78,6 @@ class IMU_Server(Thread):
         print("Stopping IMU data server")
 
 if __name__ == "__main__":
-    Server = IMU_Server(loc='/dev/ttyUSB0', baud=115200 )
+    Server = IMU_Server()
     atexit.register(Server.exit_handler)
     Server.start()
