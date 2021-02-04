@@ -69,6 +69,7 @@ class IMU_Server(Thread):
                 self.imu.zero_rel_lin_accel()
                 self.imu.zero_rel_angular_pos()
                 self.imu.zero_rel_angular_vel()
+        self.socket.close()
 
     def stop_thread(self):
         self.running = False
