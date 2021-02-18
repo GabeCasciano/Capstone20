@@ -1,6 +1,7 @@
 * Need to setup each sensor as a singleton, if the port is already busy DO NOT START !!!
 * Need to add 2D velocity, 2D distance calculations, 2D bearing (deg or rads), convert decimal to minute to GPS library
-* Need at exit for gps & imu
+* Need at exit for gps & imu (done)
+
 Testing:
 	1. ensure every function outputs a value
 	2. double check the zeroing functions work (if applies)
@@ -12,14 +13,11 @@ Testing:
 General:
 	1. System Diagram
 		i. hardware
-		ii. software (object diagram, 50% done) 
-	2. Class Diagram
-	3. State Diagram & Sequence Diagrams (define the functionality)
-		i. general state machine (done) 
-		ii. sensors & sensor fusion
-		iii. path planning
-		iv. obstacle detection & avoidance
-		iv. Macro scale algorithm
-	4. Activity Diagram
-
+		ii. software (object diagram, done)
+	2. Class Diagram (done)
+	3. Activity Diagram (define the functionality)
+		i. general operation (done)
+		ii. sensors & sensor fusion (done)
+		iii. path planning/following (done)
+		iv. obstacle detection & avoidance (done)
 	tools: Violet UML

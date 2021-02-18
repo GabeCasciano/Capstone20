@@ -41,7 +41,7 @@ class GPS_Interface(Thread):
         self.prev_time = 0
         self.sample_rate = 0
 
-        atexit.register(self.exit_cmd)
+        atexit.register(self.do_exit())
 
     # --- Parsing thread ---
 
@@ -184,7 +184,7 @@ class GPS_Interface(Thread):
 
         return self.harversin(goal[0], goal[1], self.latitude, self.longitude)
 
-    def exit_cmd(self):
+    def do_exit(self):
         self.stop_thread()
         self.gps_serial.close()
 
