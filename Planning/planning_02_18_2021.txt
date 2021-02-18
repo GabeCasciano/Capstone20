@@ -6,3 +6,15 @@
     - make an install script (will install the required dependencies as well)
     - make a packing script
 
+SF general algo:
+1. call calibration function
+   get base gps values
+   zero imu if needed
+
+2. start loop
+    # check if new gps data is available or new flag is set by gps (new data)
+    if true:
+        i. dead reckon the system and calculate the states
+        ii. reset the velocity logger (if this is too frequent do every other)
+    if false:
+        i. predict the current location and states

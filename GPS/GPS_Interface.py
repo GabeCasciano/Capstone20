@@ -36,6 +36,8 @@ class GPS_Interface(Thread):
         self.relative_longitude = 0
 
         self.running = True
+        self.new = False
+
 
         self.current_time = 0
         self.prev_time = 0
@@ -83,6 +85,9 @@ class GPS_Interface(Thread):
     def stop_thread(self):
         self.running = False
 
+    def clear_new_flag(self):
+        self.new = False
+
     # --- Calculation functions ---
 
     def harversin(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -118,11 +123,13 @@ class GPS_Interface(Thread):
         self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
         self.altitude = float(data[8])
         self.do_sample_rate()
+        self.new = True
 
     def parse_GGL(self, data: list):
         self.latitude = self.convert_min_to_decimal(data[0]) * (1 if data[1] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'E' else -1)
         self.do_sample_rate()
+        self.new = True
 
     def parse_RMA(self, data: list):
         if data[0] == 'A':
@@ -130,17 +137,20 @@ class GPS_Interface(Thread):
             self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
             self.ground_speed = float(data[7]) * GPS_Interface.KNOTS_TO_KM
             self.do_sample_rate()
+            self.new = True
 
     def parse_RMC(self, data: list):
         self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
         self.ground_speed = float(data[6]) * GPS_Interface.KNOTS_TO_KM
         self.do_sample_rate()
+        self.new = True
 
     def parse_TRF(self, data: list):
         self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
         self.do_sample_rate()
+        self.new = True
 
     def parse_VBW(self, data: list):
         self.ground_speed = float(data[4]) * GPS_Interface.KNOTS_TO_KM
