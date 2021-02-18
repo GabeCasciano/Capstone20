@@ -1,8 +1,17 @@
+# Gabriel Casciano, Feb 7, 2021
+
+# Capestone 2020-2021
+
+# This library is used to interface with the USB GPS to interface over the serial bus.
+# This interface is multithreaded so it can run simultaneous to other interfaces and other
+# system functionality
+
 from serial import Serial
 from serial import tools
 from threading import *
 from math import radians, cos, sin, asin, atan, sqrt
 import time
+import atexit
 
 class GPS_Interface(Thread):
 
@@ -32,6 +41,7 @@ class GPS_Interface(Thread):
         self.prev_time = 0
         self.sample_rate = 0
 
+        atexit.register(self.exit_cmd)
 
     # --- Parsing thread ---
 
@@ -174,6 +184,9 @@ class GPS_Interface(Thread):
 
         return self.harversin(goal[0], goal[1], self.latitude, self.longitude)
 
+    def exit_cmd(self):
+        self.stop_thread()
+        self.gps_serial.close()
 
 
 

@@ -1,6 +1,6 @@
 * Need to setup each sensor as a singleton, if the port is already busy DO NOT START !!!
 * Need to add 2D velocity, 2D distance calculations, 2D bearing (deg or rads), convert decimal to minute to GPS library
-
+* Need at exit for gps & imu
 Testing:
 	1. ensure every function outputs a value
 	2. double check the zeroing functions work (if applies)

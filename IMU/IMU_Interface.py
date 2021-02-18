@@ -1,3 +1,11 @@
+# Gabriel Casciano, Feb 7, 2021
+
+# Capestone 2020-2021
+
+# This library is used to interface with the BWT61CL IMU to interface over the serial bus.
+# This interface is multithreaded so it can run simultaneous to other interfaces and other
+# system functionality
+
 from serial import Serial
 from serial import tools
 from threading import *

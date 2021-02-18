@@ -13,15 +13,22 @@ class IMU_Server(Thread):
 
         super(IMU_Server, self).__init__()
 
-    
+    def pack_and_send(self, command:int, data, addr):
+        out = str(command) + ","
+        if type(data) is list:
+            for i in range(0, len(data)):
+                out += str(data[i]) + ","
+        else:
+            out += str(data)
+        self.socket.sendto(str.encode(out), addr)
+
     def run(self) -> None:
+        self.imu.start()
         print("Beginning IMU data server on port: " + str(self.port))
         self.socket.bind(('',self.port))
-
         while self.running:
             message, addr = self.socket.recvfrom(1024)
-            data = message.split(",")
-        
+            data = message.decode().split(",")
             # format data string
             if '' in data:
                 data.remove('')
@@ -33,7 +40,7 @@ class IMU_Server(Thread):
                 else:
                     data = self.imu.get_linear_acceleration()
                 
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(1, data, addr)
 
             elif data[0] == 0x2: # get the angular pos
                 if len(data) > 1 and data[1] < 3:
@@ -41,7 +48,7 @@ class IMU_Server(Thread):
                 else:
                     data = self.imu.get_angular_orientation()
 
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(2, data, addr)
 
             elif data[0] == 0x3: # get the angular velocity
                 if len(data) > 1 and data[1] < 3:
@@ -49,7 +56,7 @@ class IMU_Server(Thread):
                 else:
                     data = self.imu.get_angular_velocity()
 
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(3, data, addr)
 
             elif data[0] == 0x4: # get sample rate 
                 if len(data) > 1 and data[1] < 3:
@@ -57,7 +64,7 @@ class IMU_Server(Thread):
                 else:
                     data = self.imu.get_sample_rate()
 
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(4, data, addr)
 
             elif data[0] == 0x5: # zero lin accel
                 self.imu.zero_lin_accel()
@@ -69,6 +76,10 @@ class IMU_Server(Thread):
                 self.imu.zero_rel_lin_accel()
                 self.imu.zero_rel_angular_pos()
                 self.imu.zero_rel_angular_vel()
+            
+            elif data[0] == 0x66:
+                temp = "ack"
+                self.socket.sendto(str.encode(temp), addr)
         self.socket.close()
 
     def stop_thread(self):
@@ -82,3 +93,7 @@ if __name__ == "__main__":
     Server = IMU_Server()
     atexit.register(Server.exit_handler)
     Server.start()
+    # sock = socket(AF_INET, SOCK_DGRAM)
+    # sock.sendto(str.encode("1"), ("localhost", 8001))
+    # msg, addr = sock.recvfrom(1024)
+    # print(msg.decode())

@@ -13,7 +13,17 @@ class GPS_Server(Thread):
 
         super(GPS_Server, self).__init__()
 
+    def pack_and_send(self, command: int, data, addr):
+        out = str(command) + ","
+        if type(data) is list:
+            for i in range(0, len(data)):
+                out += str(data[i]) + ","
+        else:
+            out += str(data)
+        self.socket.sendto(str.encode(out), addr)
+
     def run(self) -> None:
+        self.gps.start()
         print("Beginning GPS data server on port:" + str(self.port))
         self.socket.bind(('', self.port))
 
@@ -30,7 +40,7 @@ class GPS_Server(Thread):
 
             if data[0] == 0x1: # get position
                 data = self.gps.get_position()
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(data[0], data, addr)
 
             elif data[0] == 0x2: # get lat
                 data = self.gps.get_latitude()
@@ -38,28 +48,28 @@ class GPS_Server(Thread):
 
             elif data[0] == 0x3: # get long
                 data = self.gps.get_longitude()
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(data[0], data, addr)
 
             elif data[0] == 0x4: # get relative distance (distance to start)
                 data = self.gps.get_relative_distance()
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(data[0], data, addr)
 
             elif data[0] == 0x5: # get relative bearing
                 data = self.gps.get_relative_bearing()
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(data[0], data, addr)
 
             elif data[0] == 0x6: # get distance to
                 if len(data) == 3:
                     data = self.gps.get_distance_to((lat,lon))
-                    self.socket.sendto(str(data), addr)
+                    self.pack_and_send(data[0], data, addr)
 
             elif data[0] == 0x7: # get ground speed
                 data = self.gps.get_ground_speed()
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(data[0], data, addr)
 
             elif data[0] == 0x8: # get sample rate
                 data = self.gps.get_sample_rate()
-                self.socket.sendto(str(data), addr)
+                self.pack_and_send(data[0], data, addr)
 
             elif data[0] == 0x9: # zero relative location
                 self.gps.zero_location()

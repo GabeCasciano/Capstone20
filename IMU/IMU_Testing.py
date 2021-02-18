@@ -9,4 +9,4 @@ if __name__ == "__main__":
     IMU.start()
     time.sleep(1)
     while True:
-        print(IMU.get_linear_acceleration())
+        print(IMU.get_angular_orientation())
