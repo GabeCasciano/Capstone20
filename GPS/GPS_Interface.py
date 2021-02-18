@@ -1,7 +1,17 @@
+# Gabriel Casciano, Feb 7, 2021
+
+# Capestone 2020-2021
+
+# This library is used to interface with the USB GPS to interface over the serial bus.
+# This interface is multithreaded so it can run simultaneous to other interfaces and other
+# system functionality
+
 from serial import Serial
 from serial import tools
 from threading import *
 from math import radians, cos, sin, asin, atan, sqrt
+import time
+import atexit
 
 class GPS_Interface(Thread):
 
@@ -21,14 +31,17 @@ class GPS_Interface(Thread):
         self.longitude = 0
         self.altitude = 0
         self.ground_speed = 0
-        self.how_valid = 0
-        self.sats_in_use = 0
 
         self.relative_latitude = 0
         self.relative_longitude = 0
 
         self.running = True
 
+        self.current_time = 0
+        self.prev_time = 0
+        self.sample_rate = 0
+
+        atexit.register(self.exit_cmd)
 
     # --- Parsing thread ---
 
@@ -61,6 +74,11 @@ class GPS_Interface(Thread):
                 # un-necessary command sentence
 
         self.gps_serial.close()
+
+    def do_sample_rate(self):
+        self.current_time = time.perf_counter()
+        self.sample_rate = self.current_time - self.prev_time
+        self.prev_time = self.current_time
 
     def stop_thread(self):
         self.running = False
@@ -99,26 +117,30 @@ class GPS_Interface(Thread):
         self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
         self.altitude = float(data[8])
+        self.do_sample_rate()
 
     def parse_GGL(self, data: list):
-        print(data[0], data[2])
         self.latitude = self.convert_min_to_decimal(data[0]) * (1 if data[1] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'E' else -1)
+        self.do_sample_rate()
 
     def parse_RMA(self, data: list):
         if data[0] == 'A':
             self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] == 'N' else -1)
             self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
             self.ground_speed = float(data[7]) * GPS_Interface.KNOTS_TO_KM
+            self.do_sample_rate()
 
     def parse_RMC(self, data: list):
         self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
         self.ground_speed = float(data[6]) * GPS_Interface.KNOTS_TO_KM
+        self.do_sample_rate()
 
     def parse_TRF(self, data: list):
         self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
+        self.do_sample_rate()
 
     def parse_VBW(self, data: list):
         self.ground_speed = float(data[4]) * GPS_Interface.KNOTS_TO_KM
@@ -127,8 +149,10 @@ class GPS_Interface(Thread):
         pass
 
     # --- Get Data functions ---
+    def get_sample_rate(self) -> float:
+        return self.sample_rate
 
-    def get_velocity(self) -> float:
+    def get_ground_speed(self) -> float:
         return self.ground_speed
 
     def get_position(self) -> list:
@@ -149,6 +173,7 @@ class GPS_Interface(Thread):
 
     def get_relative_bearing(self) -> float:
         # Returns bearing relative to "True" north
+        # convert to degrees as well
 
         lat, lon = map(radians, [self.relative_latitude - self.latitude, self.relative_longitude-self.longitude])
         return atan(lon / lat)
@@ -159,6 +184,9 @@ class GPS_Interface(Thread):
 
         return self.harversin(goal[0], goal[1], self.latitude, self.longitude)
 
+    def exit_cmd(self):
+        self.stop_thread()
+        self.gps_serial.close()
 
 
 

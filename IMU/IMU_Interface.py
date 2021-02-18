@@ -1,6 +1,15 @@
+# Gabriel Casciano, Feb 7, 2021
+
+# Capestone 2020-2021
+
+# This library is used to interface with the BWT61CL IMU to interface over the serial bus.
+# This interface is multithreaded so it can run simultaneous to other interfaces and other
+# system functionality
+
 from serial import Serial
 from serial import tools
 from threading import *
+import time
 
 class IMU_Interface(Thread):
     
@@ -14,8 +23,6 @@ class IMU_Interface(Thread):
         self.lin_accel = [0, 0, 0]
         self.angular_pos = [0, 0, 0]
         self.angular_vel = [0, 0, 0]
-        self.temp = 0
-        self.rel_temp = 0
 
         self.rel_lin_accel = [0, 0, 0]
         self.rel_angular_pos = [0,0,0]
@@ -24,6 +31,10 @@ class IMU_Interface(Thread):
         self.vel_log = [0,0,0]
 
         self.running = True
+
+        self.current_time = [0,0,0]
+        self.prev_time = [0,0,0]
+        self.sample_rate = [0,0,0]
 
     # --- Parsing thread ---
 
@@ -41,30 +52,42 @@ class IMU_Interface(Thread):
 
                 if data_word[1] == 0X51: # linear accel
                     self.parse_lin_accel(data_word)
+                    self.do_sample_rate(0)                  
+
                 elif data_word[1] == 0X52: # angular vel
                     self.parse_angular_vel(data_word)
+                    self.do_sample_rate(1)
+
                 elif data_word[1] == 0X53: # angular pos
                     self.parse_angular_pos(data_word)
-                    
+                    self.do_sample_rate(2)
+
                 self.do_velocity_logger()
             data_word = []
 
+        self.imu_serial.close()
+
+    def do_sample_rate(self, command:int):
+        self.current_time[command] = time.perf_counter()
+        self.sample_rate[command] = self.current_time[command] - self.prev_time[command]
+        self.prev_time[command] = self.current_time[command]
+
     def stop_thread(self):
         self.running = False
-
+        
     # --- Parsing Functions ---
-    def parse_lin_accel(self, data):
+    def parse_lin_accel(self, data:list):
 
         self.lin_accel[0] = (((data[3] << 8)|data[2])/32768) * 16
         self.lin_accel[1] = ((data[5] << 8)|data[4])/32768 * 16
         self.lin_accel[2] = ((data[7] << 8)|data[6])/32768 * 16
         #self.temp = (((data[9] << 8)|data[8])/340) + 36.53
     
-        self.temp = self.rel_temp - self.temp
+        #self.temp = self.rel_temp - self.temp
         #self.lin_accel = self.rel_lin_accel - self.lin_accel
         #self.lin_accel = [self.rel_lin_accel[i] - self.lin_accel[i] for i in range(0, 3)]
 
-    def parse_angular_vel(self, data:str):
+    def parse_angular_vel(self, data:list):
        
         self.angular_vel[0] = ((data[3] << 8)|data[2])/32768 * 2000
         self.angular_vel[1] = ((data[5] << 8)|data[4])/32768 * 2000
@@ -77,7 +100,7 @@ class IMU_Interface(Thread):
 
         self.angular_vel = [self.rel_angular_vel[i] - self.angular_vel[i] for i in range(0,3)]
 
-    def parse_angular_pos(self, data:str):
+    def parse_angular_pos(self, data:list):
         self.angular_pos[0] = ((data[3] << 8)|data[2])/32768 * 180
         self.angular_pos[1] = ((data[5] << 8)|data[4])/32768 * 180
         self.angular_pos[2] = ((data[7] << 8)|data[6])/32768 * 180
@@ -92,6 +115,12 @@ class IMU_Interface(Thread):
         self.vel_log += self.lin_accel
 
     # --- Get Functions ---
+    def get_sample_rate(self, command:int=None):
+        if command is not None:
+            if command < 3:
+                return self.sample_rate[command]
+        return self.sample_rate
+
     def get_linear_acceleration(self, axis:int = None):
         if axis is not None:
             if axis < 3:
@@ -131,9 +160,3 @@ class IMU_Interface(Thread):
     
     def zero_vel_log(self):
         self.vel_log = [0,0,0]
-    
-    def zero_temp(self):
-        self.rel_temp = self.temp
-
-    def zero_rel_temp(self):
-        self.rel_temp = 0
