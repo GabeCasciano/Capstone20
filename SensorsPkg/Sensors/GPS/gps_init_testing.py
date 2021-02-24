@@ -1,5 +1,5 @@
 import time
-from GPS.GPS_Interface import GPS_Interface
+from SensorsPkg.Sensors.GPS import GPS_Interface
 
 
 if __name__ == "__main__":

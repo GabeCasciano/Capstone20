@@ -6,6 +6,10 @@
 # This interface is multithreaded so it can run simultaneous to other interfaces and other
 # system functionality
 
+# To-Do:
+# 1. fix issues where for no connections
+# 2. add and implement new data flag
+
 from serial import Serial
 from serial import tools
 from threading import *
@@ -41,7 +45,7 @@ class GPS_Interface(Thread):
         self.prev_time = 0
         self.sample_rate = 0
 
-        atexit.register(self.do_exit())
+        atexit.register(self.do_exit)
 
     # --- Parsing thread ---
 
@@ -99,14 +103,18 @@ class GPS_Interface(Thread):
 
     def convert_min_to_decimal(self, position: str) -> float:
         # Converts the position in time into degrees
-        temp = position.split(".")
-        before = list(temp[0])
+        try:
+            temp = position.split(".")
+            before = list(temp[0])
 
-        if before[0] == '0':
-            before.remove('0')
+            if before[0] == '0':
+                before.remove('0')
 
-        degrees = float(before[0] + before[1])
-        minutes = float(before[2] + before[3] + "." + temp[1])
+            degrees = float(before[0] + before[1])
+            minutes = float(before[2] + before[3] + "." + temp[1])
+        except:
+            degrees = 0
+            minutes = 0
 
         return degrees + minutes / 60
 
