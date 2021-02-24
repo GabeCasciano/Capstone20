@@ -41,7 +41,7 @@ class IMU_Interface(Thread):
         self.prev_time = [0.0, 0.0, 0.0]
         self.sample_rate = [0.0, 0.0, 0.0]
 
-        atexit.register(self.do_exit())
+        atexit.register(self.do_exit)
 
     # --- Parsing thread ---
 

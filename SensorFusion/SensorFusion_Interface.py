@@ -2,6 +2,7 @@ from threading import *
 from time import *
 import atexit
 
+
 class SensorFusion_Interface(Thread):
 
     def __init__(self):
