@@ -6,6 +6,10 @@
 # This interface is multithreaded so it can run simultaneous to other interfaces and other
 # system functionality
 
+# To-Do:
+# 1. fix issues where for no connections
+# 2. add and implement new data flag
+
 from serial import Serial
 from serial import tools
 from threading import *

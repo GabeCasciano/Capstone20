@@ -1,5 +1,5 @@
 from socket import *
-from IMU_Interface import *
+from Sensors.IMU.IMU_Interface import *
 from threading import *
 import atexit
 

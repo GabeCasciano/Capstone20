@@ -1,7 +1,7 @@
 # Use this python file rigorously test all fo the GPS interface functions
 # and the functionality of the GPS itself
 
-from GPS_Interface import *
+from Sensors.GPS.GPS_Interface import *
 
 if __name__ == '__main__':
 

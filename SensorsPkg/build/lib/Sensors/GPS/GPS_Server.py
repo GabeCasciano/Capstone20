@@ -1,5 +1,5 @@
 from socket import *
-from GPS_Interface import *
+from Sensors.GPS.GPS_Interface import *
 from threading import *
 import atexit
 

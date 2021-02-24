@@ -1,7 +1,7 @@
 # Use this program to rigorously test the function of the IMU interface
 # and the functionality of the sensor
 
-from IMU_Interface import IMU_Interface
+from Sensors.IMU.IMU_Interface import *
 import time
 
 if __name__ == "__main__":
