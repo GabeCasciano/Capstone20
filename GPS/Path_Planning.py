@@ -10,22 +10,23 @@ class PathPlanning(Thread):
     GPS = GPS_Interface()
     max_velocity = 100
     max_acceleration = 100
-    path_radius = 20
-    seek_offset = 20
+    path_radius = 0
+    seek_offset = 3
     
-    def predict_location(self, x, y):
+    def predict_location(self, current_x, current_y):
         #speed = self.GPS.get_velocity() #this method should be modified or renamed
         #bearing = self.GPS.get_relative_bearing()
         
-        speed = 44 #this method should be modified or renamed
-        bearing = 23
+        speed = 2.265 #this method should be modified or renamed
+        bearing = 20
+        sample_time = 2 # 50 is arbitrary value -> calibrate real value
 
-        # initial velocity vector
-        m = tan(90 - bearing) 
-        b = y - m * x
-        d = speed * 50 # 50 is arbitrary value -> calibrate real value
+        # initial velocity vector                                                                                                 
+        m = tan(math.radians(90 - bearing)) # double check
+        b = current_y - m * current_x
+        d = speed * sample_time
         
-        future_x = cos(90 - bearing) * d
+        future_x = cos(math.radians(90 - bearing)) * d + current_x
         future_y = future_x * m + b
         future_point = Point(future_x, future_y)
         
@@ -43,27 +44,28 @@ class PathPlanning(Thread):
 
     def get_location(self):
         #location_p = self.path.get_relative_point(self.GPS.get_longitude(), self.GPS.get_latitude())
-        location_p = self.path.get_relative_point(699, 2345)
+        location_p = self.path.get_relative_point(3, 7)
 
         return location_p
 
 
-    def get_normal(self,  p): # update for segments
+    def get_normal(self,  future_p): # update for segments
         first_run = True
         for segment in self.path.get_segments():
             start_p = segment.p1
             end_p = segment.p2
             m_segment = (end_p.y - start_p.y) / (end_p.x - start_p.x)
+
             m_normal = -1 * (1/m_segment)
-            b_normal = p.y - m_normal * p.x
+            b_normal = future_p.y - m_normal * future_p.x
 
             x = (b_normal) / (m_segment - m_normal)
-            y = m_segment * x
-
+            y = m_segment * x # this will only work on original segment!
+ 
             temp_normal_point = Point(x,y)
 
             # need segment with shortest normal distance
-            dist = math.sqrt((p.x - temp_normal_point.x) ** 2 + (p.y - temp_normal_point.y) ** 2)
+            dist = math.sqrt((future_p.x - temp_normal_point.x) ** 2 + (future_p.y - temp_normal_point.y) ** 2)
             if first_run:
                 normal_point = temp_normal_point
                 closest_segment = segment
@@ -82,42 +84,56 @@ class PathPlanning(Thread):
         len_segment = segment.get_len()
         m_segment_normalized = m_segment / len_segment
 
-        target_x = normal_p.x + self.seek_offset * m_segment_normalized
-        target_y = normal_p.y + self.seek_offset * m_segment_normalized
+        # target_x = normal_p.x + self.seek_offset * m_segment_normalized
+        # target_y = normal_p.y + self.seek_offset * m_segment_normalized
+        
+        target_x = math.cos(math.atan(m_segment)) * self.seek_offset + normal_p.x
+        target_y = target_x * m_segment
         target = Point(target_x, target_y)
 
+        print("Target Point: " + self.print_point(target))
+
         target_distance = math.sqrt((current_p.x - target.x) ** 2 + (current_p.y - target.y) ** 2)
-        target_bearing = 90 - math.sin((target.y - current_p.y) / target_distance)
+        target_bearing = 90 - math.sin((target.y - current_p.y) / target_distance) # check
 
         # current velocity
         # bearing = self.GPS.get_relative_bearing()
-        bearing = 133
+        bearing = 20
         
         # calculate correction
         dist_future = math.sqrt((current_p.x - future_location.x) ** 2 + (current_p.y - future_location.y) ** 2)
-        correction_length = math.sqrt(target_distance ** 2 + dist_future ** 2 - 2 * target_distance*dist_future * math.cos(180 - bearing))
-        correction_bearing = math.sinh((dist_future / target_distance) * math.sin(180 - bearing))
+        correction_length = math.sqrt(target_distance ** 2 + dist_future ** 2 - 2 * target_distance*dist_future * math.cos(math.radians(180 - bearing)))
+        correction_bearing = math.asin((dist_future / correction_length) * math.sin(math.radians(180 - bearing))) * 180 / math.pi
 
         return[correction_length, correction_bearing]
 
+    def print_point(self, p):
+        x = str(p.x)
+        y = str(p.y)
+        return "[" + x + ", " + y + "]"
 
     def follow_path(self):
         dest = self.get_destination() #relative destination
+        
         current_location = self.get_location()
+        print("Current Location: ", self.print_point(current_location))
+        
         future_location = self.predict_location(current_location.x, current_location.y)
+        print("Future Location: ", self.print_point(future_location))
 
         # Check if future position is within the radius of the path
         [normal_point, segment] = self.get_normal(future_location)
-        
+        print("Normal Point: ", self.print_point(normal_point))
+
         # distance between normal point and predicted location 
         dist = math.sqrt((future_location.x - normal_point.x) ** 2 + (future_location.y - normal_point.y) ** 2)
         
         # vehicle headed off path if dist is greater than the path radius
         if dist >= self.path_radius:
             
-            target_location = self.get_correction_vector(current_location, future_location, normal_point, segment) 
+            correction_vector = self.get_correction_vector(current_location, normal_point, future_location, segment) 
             
-            return target_location
+            return correction_vector
 
 
     def __init__(self, lng, lat):
@@ -128,8 +144,8 @@ class PathPlanning(Thread):
         # self.initial_lng = self.GPS.get_latitude()
         # self.initial_lat = self.GPS.get_longitude()
         
-        self.initial_lng = 2345
-        self.initial_lat = 2333
+        self.initial_lng = 0
+        self.initial_lat = 0
 
         self.path = Path(self.initial_lng, self.initial_lat, self.destination_lng, self.destination_lat)
 
@@ -196,8 +212,8 @@ class Path():
         self.initial_lng = current_lng
         self.initial_lat = current_lat
 
-        relative_destination = self.get_relative_point(self.destination_lng, self.destination_lat)
-        relative_initial_point = self.get_relative_point(self.initial_lng, self.initial_lat)
+        relative_destination = self.get_relative_point(self.destination_lat, self.destination_lng)
+        relative_initial_point = self.get_relative_point(self.initial_lat, self.initial_lng)
         
         initial_segment = Segment(relative_initial_point, relative_destination)
         self.segments.append(initial_segment)
@@ -207,6 +223,6 @@ class Path():
         # d = self.GPS.get_distance_to([dest_lng, dest_lat])
         # self.points = self.generate_path(m, d)
 
-path = PathPlanning(20,40)
+path = PathPlanning(15,5)
 target_loc = path.follow_path()
-print(target_loc)
+print("Correction vector: ", target_loc)
