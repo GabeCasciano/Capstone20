@@ -7,8 +7,9 @@
 # system functionality
 
 # To-Do:
-# 1. fix issues where for no connections
-# 2. add and implement new data flag
+# 1. fix issues where for no connections (should be fixed)
+# 2. add and implement new data flag (should be done)
+# both items above need testing
 
 from serial import Serial
 from serial import tools
@@ -40,6 +41,7 @@ class GPS_Interface(Thread):
         self.relative_longitude = 0
 
         self.running = True
+        self.new_data_flag = False
 
         self.current_time = 0
         self.prev_time = 0
@@ -58,24 +60,24 @@ class GPS_Interface(Thread):
         while self.running:
             data = str(self.gps_serial.readline()).replace("'", "").replace("b", "").split(",")
             command = data.pop(0)
-
-            if command == "$GPGGA":
-                self.parse_GGA(data)
-            elif command == "$GPGLL":
-                self.parse_GGL(data)
-                print("GGL")
-            elif command == "$GPRMC":
-                self.parse_RMC(data)
-                print("RMC")
-            elif command == "$GPTRF":
-                self.parse_TRF(data)
-            elif command == "$GPVBW":
-                self.parse_VBW(data)
-            elif command == "$GPVTG":
-                self.parse_VTG(data)
-            else:
-                pass
-                # un-necessary command sentence
+            if data[0] != "":
+                if command == "$GPGGA":
+                    self.parse_GGA(data)
+                elif command == "$GPGLL":
+                    self.parse_GGL(data)
+                    print("GGL")
+                elif command == "$GPRMC":
+                    self.parse_RMC(data)
+                    print("RMC")
+                elif command == "$GPTRF":
+                    self.parse_TRF(data)
+                elif command == "$GPVBW":
+                    self.parse_VBW(data)
+                elif command == "$GPVTG":
+                    self.parse_VTG(data)
+                else:
+                    pass
+                    # un-necessary command sentence
 
         self.gps_serial.close()
 
@@ -83,6 +85,7 @@ class GPS_Interface(Thread):
         self.current_time = time.perf_counter()
         self.sample_rate = self.current_time - self.prev_time
         self.prev_time = self.current_time
+        self.new_data_flag = True
 
     def stop_thread(self):
         self.running = False
@@ -157,6 +160,12 @@ class GPS_Interface(Thread):
         pass
 
     # --- Get Data functions ---
+    def clear_new_data_flag(self):
+        self.new_data_flag = False
+
+    def get_new_data_flag(self) -> bool:
+        return self.new_data_flag
+
     def get_sample_rate(self) -> float:
         return self.sample_rate
 

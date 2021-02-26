@@ -2,7 +2,7 @@
 # and that they have been installed correctly on the system
 
 from Sensors.GPS.GPS_Interface import GPS_Interface
-
+from Sensors.IMU
 if __name__ == "__main__":
     gps = GPS_Interface()
     gps.start()

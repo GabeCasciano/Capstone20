@@ -44,6 +44,18 @@ GPGLL - geographical position
         hhmmss.ss = UTC of position
         A = status: A = valid data
 
+GPRMA - Recommended minimum Loran-C data
+    - data status
+    - lat
+    - N/S
+    - long
+    - W/E
+    - nu
+    - nu
+    - gound speed knots
+
+
+
 GPRMC - Recommended min specific GPS/transit data
     - time
     - warning
@@ -51,7 +63,7 @@ GPRMC - Recommended min specific GPS/transit data
     - longitude
     - speed over ground (knots)
     - magnetic variation
-
+    $GPRMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,ddmmyy,x.x,a*hh
     ex. $GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70
               1    2    3    4    5     6    7    8      9     10  11 12
 

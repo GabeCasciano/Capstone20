@@ -7,5 +7,7 @@ if __name__ == '__main__':
 
     gps = GPS_Interface()
     gps.start()
-    while True:
+    for i in range(0,19):
         print(gps.get_position())
+    gps.stop_thread()
+    exit(0)

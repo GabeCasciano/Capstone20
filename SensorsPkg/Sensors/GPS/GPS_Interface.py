@@ -7,14 +7,16 @@
 # system functionality
 
 # To-Do:
-# 1. fix issues where for no connections
-# 2. add and implement new data flag
+# 1. fix issues where for no connections (should be fixed)
+# 2. add and implement new data flag, both of these should be fixed with most recent implementation (should be done)
+# both items above need testing
 
 from serial import Serial
 from serial import tools
 from threading import *
 from math import radians, cos, sin, asin, atan, sqrt
 import time
+from datetime import datetime
 import atexit
 
 class GPS_Interface(Thread):
@@ -40,10 +42,14 @@ class GPS_Interface(Thread):
         self.relative_longitude = 0
 
         self.running = True
+        self.new_data_flag = False
+
+        self.gps_time = 0
+        self.prev_gps_time = 0
 
         self.current_time = 0
         self.prev_time = 0
-        self.sample_rate = 0
+        self.sample_period = 0
 
         atexit.register(self.do_exit)
 
@@ -58,31 +64,42 @@ class GPS_Interface(Thread):
         while self.running:
             data = str(self.gps_serial.readline()).replace("'", "").replace("b", "").split(",")
             command = data.pop(0)
-
-            if command == "$GPGGA":
-                self.parse_GGA(data)
-            elif command == "$GPGLL":
-                self.parse_GGL(data)
-                print("GGL")
-            elif command == "$GPRMC":
-                self.parse_RMC(data)
-                print("RMC")
-            elif command == "$GPTRF":
-                self.parse_TRF(data)
-            elif command == "$GPVBW":
-                self.parse_VBW(data)
-            elif command == "$GPVTG":
-                self.parse_VTG(data)
-            else:
-                pass
-                # un-necessary command sentence
+            if data[0] != "":
+                if command == "$GPGGA":
+                    self.parse_GGA(data)
+                elif command == "$GPGLL":
+                    self.parse_GGL(data)
+                    print("GGL")
+                elif command == "$GPRMC":
+                    self.parse_RMC(data)
+                    print("RMC")
+                elif command == "$GPTRF":
+                    self.parse_TRF(data)
+                elif command == "$GPVBW":
+                    self.parse_VBW(data)
+                elif command == "$GPVTG":
+                    self.parse_VTG(data)
+                else:
+                    pass
+                    # un-necessary command sentence
 
         self.gps_serial.close()
 
-    def do_sample_rate(self):
+    def do_new_data_flag(self):
         self.current_time = time.perf_counter()
-        self.sample_rate = self.current_time - self.prev_time
+        if self.gps_time == self.prev_gps_time:
+            self.new_data_flag = False
+            return
+
+        if self.get_position() == [0.0, 0.0]:
+            self.new_data_flag = False
+            return
+
+        self.sample_period = self.current_time - self.prev_time
         self.prev_time = self.current_time
+        self.prev_gps_time = self.gps_time
+        self.new_data_flag = True
+
 
     def stop_thread(self):
         self.running = False
@@ -121,34 +138,46 @@ class GPS_Interface(Thread):
     # --- Parsing functions ---
     # there is more information to parse, to-do later, these are the essentials
 
+    def parse_time(self, _time:str):
+        time_string = list(_time)
+        if time_string.__len__() >= 9:
+            hour = str(time_string[0:1])
+            minute = str(time_string[2:3])
+            second = str(time_string[4:8])
+            self.gps_time = datetime(hour=int(hour), minute=int(minute), second=float(second))
+
     def parse_GGA(self, data: list):
+        self.parse_time(data[0])
         self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
         self.altitude = float(data[8])
-        self.do_sample_rate()
+        self.do_new_data_flag()
 
     def parse_GGL(self, data: list):
+        self.parse_time(data[4])
         self.latitude = self.convert_min_to_decimal(data[0]) * (1 if data[1] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'E' else -1)
-        self.do_sample_rate()
+        self.do_new_data_flag()
 
     def parse_RMA(self, data: list):
         if data[0] == 'A':
             self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] == 'N' else -1)
             self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
             self.ground_speed = float(data[7]) * GPS_Interface.KNOTS_TO_KM
-            self.do_sample_rate()
+            self.do_new_data_flag()
 
     def parse_RMC(self, data: list):
+        self.parse_time(data[0])
         self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
         self.ground_speed = float(data[6]) * GPS_Interface.KNOTS_TO_KM
-        self.do_sample_rate()
+        self.do_new_data_flag()
 
     def parse_TRF(self, data: list):
+        self.parse_time(data[0])
         self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
         self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
-        self.do_sample_rate()
+        self.do_new_data_flag()
 
     def parse_VBW(self, data: list):
         self.ground_speed = float(data[4]) * GPS_Interface.KNOTS_TO_KM
@@ -157,6 +186,12 @@ class GPS_Interface(Thread):
         pass
 
     # --- Get Data functions ---
+    def clear_new_data_flag(self):
+        self.new_data_flag = False
+
+    def get_new_data_flag(self) -> bool:
+        return self.new_data_flag
+
     def get_sample_rate(self) -> float:
         return self.sample_rate
 
