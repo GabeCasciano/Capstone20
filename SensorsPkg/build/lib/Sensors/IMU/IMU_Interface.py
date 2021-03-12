@@ -1,192 +1,241 @@
-# Gabriel Casciano, Feb 7, 2021
-
-# Capestone 2020-2021
-
-# This library is used to interface with the BWT61CL IMU to interface over the serial bus.
-# This interface is multithreaded so it can run simultaneous to other interfaces and other
-# system functionality
-
+import numpy as np
 from serial import Serial, tools
 from threading import *
 from time import *
 import atexit
 
 class IMU_Interface(Thread):
-    
-    def __init__(self, loc: str = '/dev/ttyUSB0', baud: int = 115200):
-        self.imu_serial = Serial()
-        self.imu_serial.port = loc
-        self.imu_serial.baudrate = baud
+    ANGLE_UNSIGNED = False
+    ANGLE_SIGNED = True
+    _version = 1.1
+    _angle_sign = ANGLE_UNSIGNED
+
+    def __init__(self, loc: str = '/dev/ttyUSB0', baud: int = 115200, angle_sign:bool=False):
+
+        self.__imu_serial = Serial()
+        self.__imu_serial.port = loc
+        self.__imu_serial.baudrate = baud
 
         super(IMU_Interface, self).__init__()
 
-        self.lin_accel = [0.0, 0.0, 0.0]
-        self.angular_pos = [0.0, 0.0, 0.0]
-        self.angular_vel = [0.0, 0.0, 0.0]
+        self._angle_sign = angle_sign
 
-        self.lin_accel_bias = [0.0, 0.0, 0.0]
-        self.angular_pos_bias = [0.0, 0.0, 0.0]
-        self.angular_vel_bias = [0.0, 0.0, 0.0]
+        # readings from the sensor directly
+        self._lin_accel = np.array(["NaN", "NaN", "NaN"], np.float32)
+        self._angular_pos = np.array(["NaN", "NaN", "NaN"], np.float32)
+        self._angular_vel = np.array(["NaN", "NaN", "NaN"], np.float32)
 
-        self.rel_lin_accel = [0.0, 0.0, 0.0]
-        self.rel_angular_pos = [0.0, 0.0, 0.0]
-        self.rel_angular_vel = [0.0, 0.0, 0.0]
+        # relative offsets for each sensor reading
+        self._rel_lin_accel = np.array([0.0, 0.0, 0.0], np.float32)
+        self._rel_angular_pos = np.array([0.0, 0.0, 0.0], np.float32)
+        self._rel_angular_vel = np.array([0.0, 0.0, 0.0], np.float32)
 
-        self.vel_log = [0.0, 0.0, 0.0]
+        # bias offsets
+        self._bias_lin_accel = np.array([0.0, 0.0, 0.0], np.float32)
+        self._bias_angular_pos = np.array([0.0, 0.0, 0.0], np.float32)
+        self._bias_angular_vel = np.array([0.0, 0.0, 0.0], np.float32)
 
         self.running = True
-        self.run_vel_logger = False
 
-        self.current_time = [0.0, 0.0, 0.0]
-        self.prev_time = [0.0, 0.0, 0.0]
-        self.sample_rate = [0.0, 0.0, 0.0]
+        self._current_time = 0.0
+        self._prev_time = 0.0
+        self._sample_rate = 0.0
 
-        atexit.register(self.do_exit)
+        atexit.register(self.exit_func)
 
-    # --- Parsing thread ---
-
-    def run(self) -> None:
-        data_word = []
-        self.imu_serial.open()
-
-        while self.running:
-            data_char = int.from_bytes(self.imu_serial.read(1), byteorder='little')
-            if data_char == 0X55:
-                data_word.append(data_char)
-                while data_word.__len__() < 9:
-                    data_char = int.from_bytes(self.imu_serial.read(1), byteorder='little')
-                    data_word.append(data_char)
-
-                if data_word[1] == 0X51: # linear accel
-                    self.parse_lin_accel(data_word)
-                    self.do_sample_rate(0)                  
-
-                elif data_word[1] == 0X52: # angular vel
-                    self.parse_angular_vel(data_word)
-                    self.do_sample_rate(1)
-
-                elif data_word[1] == 0X53: # angular pos
-                    self.parse_angular_pos(data_word)
-                    self.do_sample_rate(2)
-
-                self.do_velocity_logger()
-            data_word = []
-
-        self.imu_serial.close()
-
-    # --- Calibration functions ---
-
-    def do_calibration(self, readings:int=10):
-        accel = [0.0, 0.0, 0.0]
-        orientation = [0.0, 0.0, 0.0]
-        angle_vel = [0.0, 0.0, 0.0]
-        for i in range(0, readings):
-            accel = [self.lin_accel[i] + accel[i] for i in range(0,3)]
-            orientation = [self.angular_pos[i] + orientation[i] for i in range(0,3)]
-            angle_vel = [self.angular_vel[i] + angle_vel[i] for i in range(0,3)]
-
-        self.lin_accel_bias = [x/readings for x in accel]
-        self.angular_pos_bias = [x/readings for x in orientation]
-        self.angular_vel_bias = [x/readings for x in angle_vel]
-
-    # --- Control Functions ---
-
+    # Control Functions
     def stop_thread(self):
         self.running = False
 
-    def start_vel_logger(self):
-        self.run_vel_logger = True
+    def exit_func(self):
+        self.__imu_serial.close()
 
-    def stop_vel_logger(self):
-        self.run_vel_logger = False
-        self.vel_log = [0.0, 0.0, 0.0]
+    def do_calibration(self):
+        print("Hold IMU steady, please allow 10s for accurate calibration")
+        accel = np.array([0.0, 0.0, 0.0], np.float32)
+        pos = np.array([0.0, 0.0, 0.0], np.float32)
+        vel = np.array([0.0, 0.0, 0.0], np.float32)
 
-    def reset_vel_logger(self):
-        self.vel_log = [0.0, 0.0, 0.0]
+        accel_dif = accel.copy()
+        pos_dif = pos.copy()
+        vel_dif = vel.copy()
 
-    def do_exit(self):
-        self.stop_thread()
-        self.imu_serial.close()
+        duration = 10
+        readings = 50
 
-    # --- Parsing Functions ---
-    def parse_lin_accel(self, data:list):
+        for i in range(0, readings):
+            accel += self._lin_accel - accel_dif
+            pos += self._angular_pos - pos_dif
+            vel += self._angular_vel - vel_dif
 
-        self.lin_accel[0] = (((data[3] << 8)|data[2])/32768) * 16
-        self.lin_accel[1] = ((data[5] << 8)|data[4])/32768 * 16
-        self.lin_accel[2] = ((data[7] << 8)|data[6])/32768 * 16
+            accel_dif = accel.copy()
+            pos_dif = pos.copy()
+            vel_dif = vel.copy()
 
-    def parse_angular_vel(self, data:list):
-       
-        self.angular_vel[0] = ((data[3] << 8)|data[2])/32768 * 2000
-        self.angular_vel[1] = ((data[5] << 8)|data[4])/32768 * 2000
-        self.angular_vel[2] = ((data[7] << 8)|data[6])/32768 * 2000
+            sleep(duration/readings)
+
+        self._bias_lin_accel = accel/readings
+        self._bias_angular_pos = pos/readings
+        self._rel_angular_vel = vel/readings
+
+        print("Done calibrating sensor")
+        print("Lin accel bias: ", self._bias_lin_accel)
+        print("Angular pos bias: ", self._bias_angular_pos)
+        print("Angular vel bias: ", self._bias_angular_vel)
 
 
-    def parse_angular_pos(self, data:list):
-        self.angular_pos[0] = ((data[3] << 8)|data[2])/32768 * 180
-        self.angular_pos[1] = ((data[5] << 8)|data[4])/32768 * 180
-        self.angular_pos[2] = ((data[7] << 8)|data[6])/32768 * 180
+    def __do_sample_rate(self):
+        self._current_time = perf_counter()
+        self._sample_rate = self._current_time - self._prev_time
+        self._prev_time = self._current_time
+
+    # Parsing functions
+    def __parse_lin_accel(self, data: list):
+        self._lin_accel[0] = float((data[3] << 8) | data[2]) / 32768 * 16
+        self._lin_accel[1] = float((data[5] << 8) | data[4]) / 32768 * 16
+        self._lin_accel[2] = float((data[7] << 8) | data[6]) / 32768 * 16
 
 
-    # --- Calculation Functions ---
-    def do_velocity_logger(self):
-        if self.run_vel_logger:
-            for i in range(0,3):
-                self.vel_log[i] += self.lin_accel[i] - self.lin_accel_bias[i]
+    def __parse_angular_vel(self, data: list):
+        self._angular_vel[0] = float((data[3] << 8) | data[2]) / 32768 * 2000
+        self._angular_vel[1] = float((data[5] << 8) | data[4]) / 32768 * 2000
+        self._angular_vel[2] = float((data[7] << 8) | data[6]) / 32768 * 2000
 
-    def do_sample_rate(self, command:int):
-        self.current_time[command] = perf_counter()
-        self.sample_rate[command] = self.current_time[command] - self.prev_time[command]
-        self.prev_time[command] = self.current_time[command]
+    def __parse_angular_pos(self, data: list):
+        self._angular_pos[0] = float((data[3] << 8) | data[2]) / 32768 * 180
+        self._angular_pos[1] = float((data[5] << 8) | data[4]) / 32768 * 180
+        self._angular_pos[2] = float((data[7] << 8) | data[6]) / 32768 * 180
 
-    # --- Get Functions ---
-    def get_sample_rate(self, command:int=None):
-        if command is not None:
-            if command < 3:
-                return self.sample_rate[command]
-        return self.sample_rate
+    # Thread run functions
+    def run(self) -> None:
+        data_word = []
+        self.__imu_serial.open()
 
-    def get_linear_acceleration(self, axis:int = None):
-        self.lin_accel = [self.rel_lin_accel[i] - (self.lin_accel[i] - self.lin_accel_bias[i]) for i in range(0, 3)]
-        if axis is not None:
-            if axis < 3:
-                return self.lin_accel[axis]
-        return self.lin_accel
+        while self.running:
+            data_char = int.from_bytes(self.__imu_serial.read(1), byteorder='little')
+            if data_char == 0x55:
+                data_word.append(data_char)
+                while data_word.__len__() < 9:
+                    data_char = int.from_bytes(self.__imu_serial.read(1), byteorder='little')
+                    data_word.append(data_char)
 
-    def get_angular_orientation(self, axis:int = None):
-        self.angular_pos = [self.rel_angular_pos[i] - (self.angular_pos[i] - self.angular_pos_bias[i]) for i in range(0, 3)]
-        if axis is not None:
-            if axis < 3:
-                return self.angular_pos[axis]
-        return self.angular_pos
-    
-    def get_angular_velocity(self, axis:int = None):
-        self.angular_vel = [self.rel_angular_vel[i] - (self.angular_vel[i] - self.angular_vel_bias[i]) for i in range(0, 3)]
-        if axis is not None:
-            if axis < 3:
-                return self.angular_vel[axis]
-        return self.angular_vel
+                if data_word[1] == 0X51: # linear accel
+                    self.__parse_lin_accel(data_word)
+                    self.__do_sample_rate()
 
-    # --- Zeroing Functions ---
-    def zero_lin_accel(self):
-        self.rel_lin_accel = self.lin_accel
-    
-    def reset_lin_accel(self):
-        self.rel_lin_accel = [0.0, 0.0, 0.0]
-        
-    def zero_angular_pos(self):
-        self.rel_angular_pos = self.angular_pos
-    
-    def reset_angular_pos(self):
-        self.rel_angular_pos = [0.0, 0.0, 0.0]
+                elif data_word[1] == 0X52: # angular vel
+                    self.__parse_angular_vel(data_word)
 
-    def zero_angular_vel(self):
-        self.rel_angular_vel = self.angular_vel
+                elif data_word[1] == 0X53: # angular pos
+                    self.__parse_angular_pos(data_word)
+                data_word = []
+        self.__imu_serial.close()
 
-    def reset_angular_vel(self):
-        self.rel_angular_vel = [0.0, 0.0, 0.0]
+    # Getter & setter functions
+    @property
+    def active(self):
+        return self._active
 
-    def reset_calibration(self):
-        self.lin_accel_bias = [0.0, 0.0, 0.0]
-        self.angular_pos_bias = [0.0, 0.0, 0.0]
-        self.angular_vel_bias = [0.0, 0.0, 0.0]
+
+    @property
+    def signed_angle(self):
+        return self._angle_sign
+
+    @signed_angle.setter
+    def signed_angle(self, sign:bool):
+        self._angle_sign = sign
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def lin_accel_raw(self):
+        return self._lin_accel
+
+    @property
+    def angular_pos_raw(self):
+        return self._angular_pos
+
+    @property
+    def angular_vel_raw(self):
+        return self._angular_vel
+
+    @property
+    def lin_accel(self):
+        return (self._lin_accel - self._rel_lin_accel - self._bias_lin_accel)
+
+    @property
+    def angular_pos(self):
+        pos = (self._angular_pos - self._rel_angular_pos - self._bias_angular_pos)
+        if not self._angle_sign:
+            for i in range(0, 3):
+                if pos[i] < 0:
+                    pos[i] += 360
+        return pos
+
+    @property
+    def angular_vel(self):
+        return (self._angular_vel - self._rel_angular_vel - self._bias_angular_vel)
+
+    @property
+    def rel_lin_accel(self) -> list:
+        return self._rel_lin_accel.tolist()
+
+    @rel_lin_accel.setter
+    def rel_lin_accel(self, offsets: list):
+        if offsets.__len__() == 3:
+            self._rel_lin_accel = np.array(offsets, np.float32)
+
+    @property
+    def rel_angular_pos(self) -> list:
+        return self._rel_angular_pos.tolist()
+
+    @rel_angular_pos.setter
+    def rel_angular_pos(self, offsets: list):
+        if offsets.__len__() == 3:
+            self._rel_angular_pos = np.array(offsets, np.float32)
+
+    @property
+    def rel_angular_vel(self) -> list:
+        return self._rel_angular_vel.tolist()
+
+    @rel_angular_vel.setter
+    def rel_angular_vel(self, offsets: list):
+        if offsets.__len__() == 3:
+            self._rel_angular_vel = np.array(offsets, np.float32)
+
+    @property
+    def bias_lin_accel(self):
+        return self._bias_lin_accel
+
+    @property
+    def bias_angular_pos(self):
+        return self._bias_angular_pos
+
+    @property
+    def bias_angular_vel(self):
+        return self._bias_angular_vel
+
+    @property
+    def sample_rate(self) -> float:
+        return self._sample_rate
+
+    # Data control functions
+    def set_lin_accel_rel(self):
+        self._rel_lin_accel = self._lin_accel.copy()
+
+    def set_angular_pos_rel(self):
+        self._rel_angular_pos = self._angular_pos.copy()
+
+    def set_angular_vel_rel(self):
+        self._rel_angular_vel = self._angular_vel.copy()
+
+    def zero_lin_accel_rel(self):
+        self._rel_lin_accel = np.zeros(self._rel_lin_accel.shape)
+
+    def zero_angular_pos_rel(self):
+        self._rel_angular_pos = np.zeros(self._rel_angular_pos.shape)
+
+    def zero_angular_vel_rel(self):
+        self._rel_angular_vel = np.zeros(self._rel_angular_vel.shape)

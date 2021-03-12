@@ -36,46 +36,48 @@ class IMU_Server(Thread):
 
             if data[0] == 0x1: # get the lin accel
                 if len(data) > 1 and data[1] < 3:
-                    data = self.imu.get_linear_acceleration(data[1])
+                    data = self.imu.lin_accel[data[1]]
                 else:
-                    data = self.imu.get_linear_acceleration()
+                    data = self.imu.lin_accel
                 
                 self.pack_and_send(1, data, addr)
 
             elif data[0] == 0x2: # get the angular pos
                 if len(data) > 1 and data[1] < 3:
-                    data = self.imu.get_angular_orientation(data[1])
+                    data = self.imu.angular_pos[data[1]]
                 else:
-                    data = self.imu.get_angular_orientation()
+                    data = self.imu.angular_pos
 
                 self.pack_and_send(2, data, addr)
 
             elif data[0] == 0x3: # get the angular velocity
                 if len(data) > 1 and data[1] < 3:
-                    data = self.imu.get_angular_velocity(data[1])
+                    data = self.imu.angular_vel[data[1]]
                 else:
-                    data = self.imu.get_angular_velocity()
+                    data = self.imu.angular_vel
 
                 self.pack_and_send(3, data, addr)
 
             elif data[0] == 0x4: # get sample rate 
                 if len(data) > 1 and data[1] < 3:
-                    data = self.imu.get_sample_rate(data[1])
+                    data = self.imu.sample_rate
                 else:
-                    data = self.imu.get_sample_rate()
+                    data = self.imu.sample_rate
 
                 self.pack_and_send(4, data, addr)
 
             elif data[0] == 0x5: # zero lin accel
-                self.imu.zero_lin_accel()
+                self.imu.set_lin_accel_rel()
             elif data[0] == 0x6: # zero angular pos
-                self.imu.zero_rel_angular_pos()
+                self.imu.set_angular_pos_rel()
             elif data[0] == 0x7: # zero angular vel
-                self.imu.zero_angular_vel()
+                self.imu.set_angular_vel_rel()
             elif data[0] == 0x8: # zero relatives
-                self.imu.zero_rel_lin_accel()
-                self.imu.zero_rel_angular_pos()
-                self.imu.zero_rel_angular_vel()
+                self.imu.set_lin_accel_rel()
+                self.imu.set_angular_pos_rel()
+                self.imu.set_angular_vel_rel()
+            elif data[0] == 0x9: # Calibrate
+                self.imu.do_calibration()
             
             elif data[0] == 0x66:
                 temp = "ack"

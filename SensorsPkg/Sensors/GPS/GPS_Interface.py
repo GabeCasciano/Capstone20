@@ -198,7 +198,11 @@ class GPS_Interface(Thread):
     def get_ground_speed(self) -> float:
         return self.ground_speed
 
+    def get_position_raw(self) -> list:
+        return [self.latitude, self.longitude]
+
     def get_position(self) -> list:
+        self.new_data_flag = False
         return [self.latitude, self.longitude]
 
     def get_latitude(self) -> float:
