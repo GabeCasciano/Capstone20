@@ -39,40 +39,24 @@ class GPS_Server(Thread):
             data[0] = int(data[0], 16)
 
             if data[0] == 0x1: # get position
-                data = self.gps.get_position()
-                self.pack_and_send(data[0], data, addr)
+                data = self.gps.position
+                self.pack_and_send(0x1, data, addr)
 
             elif data[0] == 0x2: # get lat
-                data = self.gps.get_latitude()
-                self.socket.sendto(str(data), addr)
+                data = self.gps.latitude
+                self.pack_and_send(0x2, data, addr)
 
             elif data[0] == 0x3: # get long
-                data = self.gps.get_longitude()
-                self.pack_and_send(data[0], data, addr)
-
-            elif data[0] == 0x4: # get relative distance (distance to start)
-                data = self.gps.get_relative_distance()
-                self.pack_and_send(data[0], data, addr)
-
-            elif data[0] == 0x5: # get relative bearing
-                data = self.gps.get_relative_bearing()
-                self.pack_and_send(data[0], data, addr)
-
-            elif data[0] == 0x6: # get distance to
-                if len(data) == 3:
-                    data = self.gps.get_distance_to((lat,lon))
-                    self.pack_and_send(data[0], data, addr)
+                data = self.gps.longitude
+                self.pack_and_send(0x3, data, addr)
 
             elif data[0] == 0x7: # get ground speed
-                data = self.gps.get_ground_speed()
-                self.pack_and_send(data[0], data, addr)
+                data = self.gps.ground_speed
+                self.pack_and_send(0x7, data, addr)
 
             elif data[0] == 0x8: # get sample rate
-                data = self.gps.get_sample_rate()
-                self.pack_and_send(data[0], data, addr)
-
-            elif data[0] == 0x9: # zero relative location
-                self.gps.zero_location()
+                data = self.gps.sample_rate
+                self.pack_and_send(0x8, data, addr)
 
         self.socket.close()
 

@@ -1,125 +1,182 @@
-# Gabriel Casciano, Feb 7, 2021
-
-# Capestone 2020-2021
-
-# This library is used to interface with the USB GPS to interface over the serial bus.
-# This interface is multithreaded so it can run simultaneous to other interfaces and other
-# system functionality
-
-# To-Do:
-# 1. fix issues where for no connections (should be fixed)
-# 2. add and implement new data flag, both of these should be fixed with most recent implementation (should be done)
-# both items above need testing
-
-from serial import Serial
-from serial import tools
+from serial import Serial, tools
 from threading import *
 from math import radians, cos, sin, asin, atan, sqrt
-import time
+from time import *
 from datetime import datetime
 import atexit
 
+
 class GPS_Interface(Thread):
 
-    data_queue = []
-    NMEA_VALID_COMMANDS = ["GPGLL", "GPRMC", "GPTRF", "GPVBW", "GPVTG"]
+    _NMEA_VALID_COMMANDS = ["GPGLL", "GPRMC", "GPTRF", "GPVBW", "GPVTG"]
     KNOTS_TO_KM = 1.852
     RADIUS_OF_EARTH = 6371
 
     def __init__(self, loc: str = '/dev/ttyACM0', baud: int = 4800):
-        self.gps_serial = Serial()
-        self.gps_serial.port = loc
-        self.gps_serial.baudrate = baud
+        self.__gps_serial = Serial()
+        self.__gps_serial.port = loc
+        self.__gps_serial.baudrate = baud
 
         super(GPS_Interface, self).__init__()
 
-        self.latitude = 0
-        self.longitude = 0
-        self.altitude = 0
-        self.ground_speed = 0
+        self._latitude = 0
+        self._longitude = 0
+        self._altitude = 0
+        self._ground_speed = 0
 
-        self.relative_latitude = 0
-        self.relative_longitude = 0
+        self._latitude_rel = 0
+        self._longitude_rel = 0
+
+        self._gps_time = 0
+        self._prev_gps_time = 0
 
         self.running = True
-        self.new_data_flag = False
+        self.error_flag = False
+        self._new_data_flag = False
 
-        self.gps_time = 0
-        self.prev_gps_time = 0
+        self._current_time = 0
+        self._prev_time = 0
+        self._sample_rate = 0
 
-        self.current_time = 0
-        self.prev_time = 0
-        self.sample_period = 0
+        atexit.register(self.exit_func)
 
-        atexit.register(self.do_exit)
-
-    # --- Parsing thread ---
-
-    def run(self) -> None:
-        self.gps_serial.open()
-
-        for i in range(0, 7): # first few lines are bs
-            self.gps_serial.readline()
-
-        while self.running:
-            data = str(self.gps_serial.readline()).replace("'", "").replace("b", "").split(",")
-            command = data.pop(0)
-            if data[0] != "":
-                if command == "$GPGGA":
-                    self.parse_GGA(data)
-                elif command == "$GPGLL":
-                    self.parse_GGL(data)
-                    print("GGL")
-                elif command == "$GPRMC":
-                    self.parse_RMC(data)
-                    print("RMC")
-                elif command == "$GPTRF":
-                    self.parse_TRF(data)
-                elif command == "$GPVBW":
-                    self.parse_VBW(data)
-                elif command == "$GPVTG":
-                    self.parse_VTG(data)
-                else:
-                    pass
-                    # un-necessary command sentence
-
-        self.gps_serial.close()
-
-    def do_new_data_flag(self):
-        self.current_time = time.perf_counter()
-        if self.gps_time == self.prev_gps_time:
-            self.new_data_flag = False
-            return
-
-        if self.get_position() == [0.0, 0.0]:
-            self.new_data_flag = False
-            return
-
-        self.sample_period = self.current_time - self.prev_time
-        self.prev_time = self.current_time
-        self.prev_gps_time = self.gps_time
-        self.new_data_flag = True
-
-
+    # Control Functions
     def stop_thread(self):
         self.running = False
 
-    # --- Calculation functions ---
+    def exit_func(self):
+        self.__gps_serial.close()
 
-    def harversin(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-        # Returns the distance between 2 points in KM
+    def __do_new_data_flag(self):
+        self._current_time = perf_counter()
+        if self._gps_time == self._prev_gps_time:
+            self._new_data_flag = False
+            return
 
-        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+        if self.position == [0.0, 0.0] or self.position == [float("NaN"), float("NaN")]: # not initialized or started
+            self._new_data_flag = False
+            return
 
-        delta_lat = lat1 - lat2
-        delta_lon = lon1 - lon2
+        self._sample_rate = self._current_time - self._prev_time
+        self._prev_time = self._current_time
+        self._prev_gps_time = self._gps_time
+        self._new_data_flag = True
 
-        a = sin(delta_lat/2)**2 + cos(lat1) * cos(lat2) * sin(delta_lon/2)
+    # parse functions
+    def __parse_time(self, _time: str):
+        time_string = list(_time)
+        if time_string.__len__() >= 9:
+            hour = str(time_string[0] + time_string[1])
+            minute = str(time_string[2] + time_string[3])
+            second = str(time_string[4] + time_string[5])
+            self._gps_time = datetime(year = datetime.now().year , month=datetime.now().month, day = datetime.now().day, hour=int(hour), minute=int(minute), second=int(second))
+
+    def __parse_GGA(self, data: list):
+        self.__parse_time(data[0])
+        self._latitude = self.convert_min_to_decimal(data[1], data[2]) if (data[1] != "" or data[2] != "") else float("NaN")
+        self._longitude = self.convert_min_to_decimal(data[3], data[4]) if (data[3] != "" or data[4] != "") else float("NaN")
+        self._altitude = float(data[8]) if (data[8] != "") else float("NaN")
+        self.__do_new_data_flag()
+
+    def __parse_GGL(self, data: list):
+        self.__parse_time(data[4])
+        self._latitude = self.convert_min_to_decimal(data[0], data[1])
+        self._longitude = self.convert_min_to_decimal(data[2], data[3])
+        self.__do_new_data_flag()
+
+    def __parse_RMA(self, data: list):
+        if data[0] == 'A':
+            self._latitude = self.convert_min_to_decimal(data[1], data[2]) if (data[1] != "" or data[2] != "") else float("NaN")
+            self._longitude = self.convert_min_to_decimal(data[3], data[4]) if (data[3] != "" or data[4] != "") else float("NaN")
+            self._ground_speed = float(data[7]) * GPS_Interface.KNOTS_TO_KM if (data[7] != "") else float("NaN")
+            self.__do_new_data_flag()
+
+    def __parse_RMC(self, data: list):
+        self.__parse_time(data[0])
+        self._latitude = self.convert_min_to_decimal(data[2], data[3]) if (data[2] != "" or data[3] != "") else float("NaN")
+        self._longitude = self.convert_min_to_decimal(data[4], data[5]) if (data[4] != "" or data[5] != "") else float("NaN")
+        self._ground_speed = float(data[6]) * GPS_Interface.KNOTS_TO_KM if (data[6] != "") else float("NaN")
+        self.__do_new_data_flag()
+
+    def __parse_TRF(self, data: list):
+        self.__parse_time(data[0])
+        self._latitude = self.convert_min_to_decimal(data[2], data[3]) if (data[2] != "" or data[3] != "") else float("NaN")
+        self._longitude = self.convert_min_to_decimal(data[4], data[5]) if (data[4] != "" or data[5] != "") else float("NaN")
+        self.__do_new_data_flag()
+
+    # run funtions
+    def run(self) -> None:
+        self.__gps_serial.open()
+
+        for i in range(0, 7): # first handful of lines are bs
+            self.__gps_serial.readline()
+
+        while self.running:
+            data = str(self.__gps_serial.readline()).replace("'", "").replace("b", "").split(",")
+            command = data.pop(0)
+            if data[0] != "":
+                if command == "$GPGGA":
+                    self.__parse_GGA(data)
+                elif command == "$GPGLL":
+                    self.__parse_GGL(data)
+                elif command == "$GPRMC":
+                    self.__parse_RMC(data)
+                elif command == "$GPTRF":
+                    self.__parse_TRF(data)
+            else:
+                self.error_flag = True
+
+        self.__gps_serial.close()
+
+    # get functions
+    @property
+    def position(self) -> list:
+        return [self._latitude, self._longitude]
+
+    @property
+    def latitude(self) -> float:
+        return self._latitude
+
+    @property
+    def longitude(self) -> float:
+        return self._longitude
+
+    @property
+    def new_data_flag(self):
+        return self._new_data_flag
+
+    @property
+    def ground_speed(self) -> float:
+        return self._ground_speed
+
+    @property
+    def sample_rate(self) -> float:
+        return self._sample_rate
+
+    @property
+    def gps_time(self):
+        return self._gps_time
+
+    # math functions
+    @staticmethod
+    def haversin(start: list, goal: list) -> float:
+        lat1, lon1, lat2, lon2 = map(radians, [start[0], start[1], goal[0], goal[1]])
+
+        delta_lat = lat1-lat2
+        delta_lon = lon1-lon2
+
+        a = sin(delta_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2)
         c = 2 * asin(sqrt(a))
         return c * GPS_Interface.RADIUS_OF_EARTH
 
-    def convert_min_to_decimal(self, position: str) -> float:
-        # Converts the position in time into degrees
+    @staticmethod
+    def bearing_to(start: list, goal: list) -> float:
+        lat, lon = map(radians, [goal[0] - start[0], goal[1] - start[1]])
+        return atan(lon/lat)
+
+    # conversion functions
+    @staticmethod
+    def convert_min_to_decimal(position: str, direction: chr) -> float:
         try:
             temp = position.split(".")
             before = list(temp[0])
@@ -128,112 +185,12 @@ class GPS_Interface(Thread):
                 before.remove('0')
 
             degrees = float(before[0] + before[1])
-            minutes = float(before[2] + before[3] + "." + temp[1])
+            minutes = float(before[2] + before[3] + ',' + temp[1])
         except:
             degrees = 0
             minutes = 0
 
-        return degrees + minutes / 60
+            return float("NaN")
 
-    # --- Parsing functions ---
-    # there is more information to parse, to-do later, these are the essentials
-
-    def parse_time(self, _time:str):
-        time_string = list(_time)
-        if time_string.__len__() >= 9:
-            hour = str(time_string[0:1])
-            minute = str(time_string[2:3])
-            second = str(time_string[4:8])
-            self.gps_time = datetime(hour=int(hour), minute=int(minute), second=float(second))
-
-    def parse_GGA(self, data: list):
-        self.parse_time(data[0])
-        self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] == 'N' else -1)
-        self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
-        self.altitude = float(data[8])
-        self.do_new_data_flag()
-
-    def parse_GGL(self, data: list):
-        self.parse_time(data[4])
-        self.latitude = self.convert_min_to_decimal(data[0]) * (1 if data[1] == 'N' else -1)
-        self.longitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'E' else -1)
-        self.do_new_data_flag()
-
-    def parse_RMA(self, data: list):
-        if data[0] == 'A':
-            self.latitude = self.convert_min_to_decimal(data[1]) * (1 if data[2] == 'N' else -1)
-            self.longitude = self.convert_min_to_decimal(data[3]) * (1 if data[4] == 'E' else -1)
-            self.ground_speed = float(data[7]) * GPS_Interface.KNOTS_TO_KM
-            self.do_new_data_flag()
-
-    def parse_RMC(self, data: list):
-        self.parse_time(data[0])
-        self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
-        self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
-        self.ground_speed = float(data[6]) * GPS_Interface.KNOTS_TO_KM
-        self.do_new_data_flag()
-
-    def parse_TRF(self, data: list):
-        self.parse_time(data[0])
-        self.latitude = self.convert_min_to_decimal(data[2]) * (1 if data[3] == 'N' else -1)
-        self.longitude = self.convert_min_to_decimal(data[4]) * (1 if data[5] == 'E' else -1)
-        self.do_new_data_flag()
-
-    def parse_VBW(self, data: list):
-        self.ground_speed = float(data[4]) * GPS_Interface.KNOTS_TO_KM
-
-    def parse_VTG(self, data: list):  # this may not be necessary
-        pass
-
-    # --- Get Data functions ---
-    def clear_new_data_flag(self):
-        self.new_data_flag = False
-
-    def get_new_data_flag(self) -> bool:
-        return self.new_data_flag
-
-    def get_sample_rate(self) -> float:
-        return self.sample_rate
-
-    def get_ground_speed(self) -> float:
-        return self.ground_speed
-
-    def get_position_raw(self) -> list:
-        return [self.latitude, self.longitude]
-
-    def get_position(self) -> list:
-        self.new_data_flag = False
-        return [self.latitude, self.longitude]
-
-    def get_latitude(self) -> float:
-        return self.latitude
-
-    def get_longitude(self) -> float:
-        return self.longitude
-
-    def zero_location(self):
-        self.relative_latitude = self.latitude
-        self.relative_longitude = self.longitude
-
-    def get_relative_distance(self) -> float:
-        return self.harversin(self.relative_latitude, self.relative_longitude, self.latitude, self.longitude)
-
-    def get_relative_bearing(self) -> float:
-        # Returns bearing relative to "True" north
-        # convert to degrees as well
-
-        lat, lon = map(radians, [self.relative_latitude - self.latitude, self.relative_longitude-self.longitude])
-        return atan(lon / lat)
-
-    def get_distance_to(self, goal: list) -> float:
-        # Expects the goal in decimal
-        # Returns the distance in KM
-
-        return self.harversin(goal[0], goal[1], self.latitude, self.longitude)
-
-    def do_exit(self):
-        self.stop_thread()
-        self.gps_serial.close()
-
-
+        return (1 if (direction == 'N' or direction == 'E') else -1) * (degrees + (minutes/60))
 

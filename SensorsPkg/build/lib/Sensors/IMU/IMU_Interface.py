@@ -4,7 +4,9 @@ from threading import *
 from time import *
 import atexit
 
+
 class IMU_Interface(Thread):
+
     ANGLE_UNSIGNED = False
     ANGLE_SIGNED = True
     _version = 1.1
