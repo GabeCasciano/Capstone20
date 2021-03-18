@@ -1,0 +1,58 @@
+def run():
+    start sensor
+    set dmin = 0, dmax = 1500
+    graph matplotlib scatter plot 
+    set iterator iterator = lidar.iter_scans()  
+    Animatation function calls update_line and plots 
+    show plot
+    stop lidar and disconnect
+
+def update_line(num, iterator, line):
+    scan = next(iterator) 
+    set np.array, get 2 points (angle and distance) in for loop 
+    call range_filter
+    save x array as rows
+    transpose x
+    call segment
+    call cluster
+    return np.array(line)
+
+
+def range_filter(scans, dmin, dmax):
+    x = scans[:, 1]
+    for i in range(len(x))
+        if x[i] < dmin:
+            x[i] = 0
+        elif x[i] > dmax:
+            x[i] = 0
+    return x
+
+def segment(segment_x, segment_threshold):
+     set points as segment_x[]
+     set segment_threshold 
+     segment_iter = 0
+
+     if segment_x[i-1]==0 && segment_x[i]!=0
+        set starting index of block
+    
+     if segment_x[i]!=0 && segment_x[i+1]==0
+        set last index
+  
+def cluster()
+    set d_points distance between 2 points within same block
+    set d_last distance between last point (p_last) of segment 1 and start point (p_start) of segment 2
+    set width between clusters
+    if d_points > width
+        split
+        increment
+    
+    if d_last < width
+        merge
+        decrement
+
+def obstacle_shape():
+    identify obstacle shape ahhhhhhh
+
+
+
+
