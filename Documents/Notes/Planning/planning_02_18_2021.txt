@@ -1,8 +1,0 @@
-* Need to confirm gps lib works, fix if it does not
-* Need to add 2D velocity, 2D distance calculations, 2D bearing (deg or rads), convert decimal to minute to GPS library
-* Need to setup each sensor as a singleton, if the port is already busy DO NOT START !!!
-
-* Need to package everything so it can used and intalled properly
-    - make an install script (will install the required dependencies as well)
-    - make a packing script
-

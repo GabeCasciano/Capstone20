@@ -1,9 +1,0 @@
-Notes on converting between Longitude and Latitude to UTM
-
-source: https://gis.stackexchange.com/questions/147425/formula-to-convert-from-wgs-84-utm-zone-34n-to-wgs-84
-source: http://www.ccgalberta.com/ccgresources/report11/2009-410_converting_latlon_to_utm.pdf
-source: https://apps.dtic.mil/dtic/tr/fulltext/u2/a307127.pdf
-source: https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system
-
-distance between 2 points
-source: https://www.movable-type.co.uk/scripts/latlong.html

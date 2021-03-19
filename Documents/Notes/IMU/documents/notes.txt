@@ -1,1 +1,0 @@
-OS requires CH341SER driver or native uart (aka jetson nano)
