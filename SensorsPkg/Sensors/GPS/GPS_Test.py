@@ -2,10 +2,14 @@
 # and the functionality of the GPS itself
 
 from GPS_Interface import *
+from time import *
 
 if __name__ == '__main__':
 
     gps = GPS_Interface()
     gps.start()
-    while True:
-        print(gps.get_position())
+    for i in range(0,19):
+        print(gps.position, gps.error_flag)
+        sleep(.5)
+    gps.stop_thread()
+    exit(0)
