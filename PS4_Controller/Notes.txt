@@ -1,0 +1,16 @@
+Pygame V1
+
+
+Sample:
+
+import pygame
+
+pygame.display.init()
+pygame.joystick.init()
+pygame.joystick.Joystick(0).init()
+
+while True:
+    pygame.event.pump()
+    print(pygame.joystick.Joystick(0).get_axis(0))
+
+
