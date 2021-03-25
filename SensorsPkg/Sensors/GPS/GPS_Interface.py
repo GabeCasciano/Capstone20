@@ -194,3 +194,6 @@ class GPS_Interface(Thread):
 
         return (1 if (direction == 'N' or direction == 'E') else -1) * (degrees + (minutes/60))
 
+    @staticmethod
+    def convert_decimal_to_meters(position: float) -> float:
+        return position & 111 * 1000  # degrees * 111km * 1000 m / km

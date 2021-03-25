@@ -12,6 +12,10 @@ class IMU_Interface(Thread):
     _version = 1.1
     _angle_sign = ANGLE_UNSIGNED
 
+    X_AXIS = 0
+    Y_AXIS = 1
+    Z_AXIS = 2
+
     def __init__(self, loc: str = '/dev/ttyUSB0', baud: int = 115200, angle_sign:bool=False):
 
         self.__imu_serial = Serial()
@@ -134,6 +138,18 @@ class IMU_Interface(Thread):
         self.__imu_serial.close()
 
     # Getter & setter functions
+    @property
+    def X(self):
+        return IMU_Interface.X_AXIS
+
+    @property
+    def Y(self):
+        return IMU_Interface.Y_AXIS
+
+    @property
+    def Z(self):
+        return IMU_Interface.Z_AXIS
+
     @property
     def active(self):
         return self._active
