@@ -23,9 +23,6 @@ def obs_avoid():
     # print(a)
     # print(d)
 
-    count = 0
-    max = 0  # max distance between points
-    jc = 0  # renamed j iterator to jc
     flag = 0
     dist_dest = math.sqrt(math.pow((x_dest - xref), 2) + math.pow((y_dest - yref),
                                                                   2))  # distance between initial point and destination
@@ -53,12 +50,12 @@ def obs_avoid():
     # # dist1
     # dist1 = abs((m * x_obs[jc]) - y_obs[jc]) / (math.sqrt(1 + math.pow(m, 2)))
     # print("dist1: ", dist1)
-    orient_angle = 0  # set orientation angle
+
     # gamma = math.degrees(math.acos(dist1 / (math.sqrt(math.pow(x_obs[jc], 2) + math.pow(y_obs[jc], 2)))))
     # print("Gamma: ", gamma)
 
-    alpha = theta  # current travelling direction, this will need to get updated
-
+    orient_angle = 0  # set orientation angle
+    alpha = theta  # current travelling direction, kept the same as theta for now, but will need to get updated
     print("alpha", alpha)
 
     diff = alpha - theta
@@ -78,10 +75,9 @@ def obs_avoid():
                     flag = 1
                 else:
                     flag = 0
-        print("orient angle 1", orient_angle)
-
+            print("orient angle 1", orient_angle)
         # obstacle detected
-        if (y_obs[j] - yref) < max_dist:
+        elif (y_obs[j] - yref) < max_dist:
             # set temp path
             alpha_temp = 90
             alpha_temp = np.radians(alpha_temp)
@@ -97,10 +93,12 @@ def obs_avoid():
             else:
                 flag = 0
             print("orient angle 2", orient_angle2)
+        else:
+            flag = 0
 
-    if flag == 1:  # this will be sent to the bot
-        # not sure how to do this
-        orient_angle = round(orient_angle, 2)
+        if flag == 1:  # this will be sent to the bot
+            # not sure how to do this
+            orient_angle = round(orient_angle, 2)
 
 
 if __name__ == '__main__':
