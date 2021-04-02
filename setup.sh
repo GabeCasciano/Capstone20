@@ -1,7 +1,7 @@
 # use this file to run any setup scripts required to install the libraries
 # or install the necessary libraries in general
 
-cd SensorsPkg
+cd AutonomousPkg
 sudo ./clear.sh
 python3 -m build
 

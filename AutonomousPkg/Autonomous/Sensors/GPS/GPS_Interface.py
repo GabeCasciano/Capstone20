@@ -30,7 +30,7 @@ class GPS_Interface(Thread):
         self._gps_time = 0
         self._prev_gps_time = 0
 
-        self.running = True
+        self.__running = False
         self.error_flag = False
         self._new_data_flag = False
 
@@ -42,7 +42,7 @@ class GPS_Interface(Thread):
 
     # Control Functions
     def stop_thread(self):
-        self.running = False
+        self.__running = False
 
     def exit_func(self):
         self.__gps_serial.close()
@@ -107,7 +107,7 @@ class GPS_Interface(Thread):
     # run funtions
     def start(self) -> None:
         super(GPS_Interface, self).start()
-        self.running = True
+        self.__running = True
         self._new_data_flag = False
 
     def run(self) -> None:
@@ -116,7 +116,7 @@ class GPS_Interface(Thread):
         for i in range(0, 7): # first handful of lines are bs
             self.__gps_serial.readline()
 
-        while self.running:
+        while self.__running:
             data = str(self.__gps_serial.readline()).replace("'", "").replace("b", "").split(",")
             command = data.pop(0)
             if data[0] != "":
@@ -134,6 +134,10 @@ class GPS_Interface(Thread):
         self.__gps_serial.close()
 
     # get functions
+    @property
+    def running(self):
+        return self.__running
+
     @property
     def position(self) -> list:
         return [self._latitude, self._longitude]

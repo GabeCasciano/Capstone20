@@ -37,7 +37,7 @@ class IMU_Interface(Thread):
         self._bias_angular_pos = np.array([0.0, 0.0, 0.0], np.float32)
         self._bias_angular_vel = np.array([0.0, 0.0, 0.0], np.float32)
 
-        self.running = True
+        self.__running = False
 
         self._current_time = 0.0
         self._prev_time = 0.0
@@ -47,7 +47,7 @@ class IMU_Interface(Thread):
 
     # Control Functions
     def stop_thread(self):
-        self.running = False
+        self.__running = False
 
     def exit_func(self):
         self.__imu_serial.close()
@@ -111,13 +111,13 @@ class IMU_Interface(Thread):
     # Thread run functions
     def start(self) -> None:
         super(IMU_Interface, self).start()
-        self.running = True
+        self.__running = True
 
     def run(self) -> None:
         data_word = []
         self.__imu_serial.open()
 
-        while self.running:
+        while self.__running:
             data_char = int.from_bytes(self.__imu_serial.read(1), byteorder='little')
             if data_char == 0x55:
                 data_word.append(data_char)
@@ -138,10 +138,11 @@ class IMU_Interface(Thread):
         self.__imu_serial.close()
 
     # Getter & setter functions
-    @property
-    def active(self):
-        return self._active
 
+
+    @property
+    def running(self):
+        return self.__running
 
     @property
     def signed_angle(self):

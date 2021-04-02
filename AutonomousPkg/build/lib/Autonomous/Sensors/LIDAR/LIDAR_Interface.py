@@ -38,13 +38,13 @@ class LIDAR_Interface(Thread):
         self._max_distance = 5000
         self._min_distance = 0
 
-        self.running = True
+        self.__running = False
 
         atexit.register(self.exit_func)
 
     # control functions
     def stop_thread(self):
-        self.running = False
+        self.__running = False
 
     def exit_func(self):
         self.stop_thread()
@@ -64,6 +64,10 @@ class LIDAR_Interface(Thread):
 
     def start_motor(self):
         self.__lidar.start_motor()
+
+    @property
+    def running(self):
+        return self.__running
 
     # properties
     @property
@@ -138,10 +142,10 @@ class LIDAR_Interface(Thread):
     # thread function
     def start(self) -> None:
         super(LIDAR_Interface, self).start()
-        self.running = True
+        self.__running = True
 
     def run(self) -> None:
-        while self.running:
+        while self.__running:
             # iter must produce a full rotation (360 points) before we can use it
             #_scan = self.__lidar.iter_scans(min_len=self.__samples_per_rev)
 

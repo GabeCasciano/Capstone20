@@ -6,6 +6,7 @@ Autonomous/Modules/Obstacle_Avoidance.py
 Autonomous/Modules/Obstacle_Detection.py
 Autonomous/Modules/Path_Following.py
 Autonomous/Modules/Path_Planning.py
+Autonomous/Modules/Sensor_Fusion.py
 Autonomous/Modules/__init__.py
 Autonomous/Sensors/SensorThreadHandler.py
 Autonomous/Sensors/__init__.py
