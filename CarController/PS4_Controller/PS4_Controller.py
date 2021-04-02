@@ -2,19 +2,22 @@ import pygame
 from threading import *
 import time
 
+
 class PS4_Controller(Thread):
 
     _DEFAULT_PRESS =0
     _ON_PRESSED = 1
     _ON_RELASED = 2
-    _X_AXIS = 1
-    _Y_AXIS = 2
+    _X_AXIS = 0
+    _Y_AXIS = 1
     _LEFT_STICK = 0
-    _RIGHT_STICK = 2
+    _RIGHT_STICK = 3
 
-    def __init__(self):
+    def __init__(self, deadzone: float = 0.1):
         super(PS4_Controller, self).__init__()
         self.running = True
+
+        pygame.joystick.init()
 
         if pygame.joystick.get_count() > 0:
             pygame.display.init()
@@ -25,6 +28,7 @@ class PS4_Controller(Thread):
             print("No joystick found")
             exit(1)
 
+        self._deadzone = deadzone
         self._buttons = []
         self._buttons_prev = []
         self._dpad = []
@@ -46,11 +50,13 @@ class PS4_Controller(Thread):
         else:
             return self._dpad[direction]
 
-    def _check_stick(self, direction: int, stick: int):
-        if direction > 0:
-            return self._joystick.get_axis(direction + stick - 1)
-        else:
-            return [self._joystick.get_axis(stick), self._joystick.get_axis(stick + 1)]
+    def _check_stick(self, direction: int, stick: int) -> float:
+        if direction >= 0:
+            temp = self._joystick.get_axis(direction + stick)
+            if abs(temp) > self._deadzone:
+                return temp
+            else:
+                return 0
 
     def stop_thread(self):
         self.running = False
@@ -65,12 +71,20 @@ class PS4_Controller(Thread):
         return self._joystick.get_axis(4)
 
     @property
-    def Left_Stick(self, axis: int = 0):
-        return self._check_stick(axis, PS4_Controller._LEFT_STICK)
+    def Left_Stick_X(self):
+        return self._check_stick(0, PS4_Controller._LEFT_STICK)
 
     @property
-    def Right_Stick(self, axis: int = 0):
-        return self._check_stick(axis, PS4_Controller._RIGHT_STICK)
+    def Left_Stick_Y(self):
+        return self._check_stick(1, PS4_Controller._LEFT_STICK)
+
+    @property
+    def Right_Stick_X(self):
+        return self._check_stick(0, PS4_Controller._RIGHT_STICK)
+
+    @property
+    def Right_Stick_Y(self):
+        return self._check_stick(1, PS4_Controller._RIGHT_STICK)
 
     @property
     def Up(self, type: int = 0):
