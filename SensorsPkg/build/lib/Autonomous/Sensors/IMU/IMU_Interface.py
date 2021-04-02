@@ -109,6 +109,10 @@ class IMU_Interface(Thread):
         self._angular_pos[2] = float((data[7] << 8) | data[6]) / 32768 * 180
 
     # Thread run functions
+    def start(self) -> None:
+        super(IMU_Interface, self).start()
+        self.running = True
+
     def run(self) -> None:
         data_word = []
         self.__imu_serial.open()

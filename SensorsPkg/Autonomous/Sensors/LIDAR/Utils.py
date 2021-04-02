@@ -1,10 +1,15 @@
 import numpy as np
 
 class Ray:
-    def __init__(self, radius: float=None, theta: float=None, quality: float=None):
-        self.__radius = radius
-        self.__theta = theta
-        self.__quality = quality
+    def __init__(self, radius: float=None, theta: float=None, quality: float=None, copy = None):
+        if copy is None:
+            self.__radius = radius
+            self.__theta = theta
+            self.__quality = quality
+        else:
+            self.__radius = copy.radius
+            self.__theta = copy.theta
+            self.__quality = copy.quality
 
     @property
     def radius(self) -> float:
@@ -52,16 +57,19 @@ class Stack:
 
     def push(self, obj):
         self.__stack.append(obj)
-        if self.__depth <= self.__stack.__len__() and self.__depth > 0:
-            self.__stack = self.__stack[:self.__depth]
+        if self.__stack.__len__() >= self.__depth > 0:
+            self.__stack.remove(self.__stack[0])
 
-    def pop(self):
-        temp = self.__stack[0]
-        self.__stack = self.__stack[1:self.__stack.__len__()]
+    def pop(self) -> list:
+        temp = self.__stack.pop()
         return temp
 
     def reset(self):
         self.__stack = []
+
+    @property
+    def length(self):
+        return self.__stack.__len__()
 
     @property
     def depth(self):
@@ -74,6 +82,12 @@ class Stack:
 
     @property
     def top(self):
+        if self.__stack.__len__() > 0:
+            return self.__stack[self.__stack.__len__() - 1]
+        return None
+
+    @property
+    def bottom(self):
         return self.__stack[0]
 
     @property

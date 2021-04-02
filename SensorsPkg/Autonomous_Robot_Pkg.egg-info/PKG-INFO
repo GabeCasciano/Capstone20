@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
-Name: Autonomous-Robot-Sensors
+Name: Autonomous-Robot-Pkg
 Version: 0.0.3
-Summary: Sensor libraries for basic autonomous robot
+Summary: Sensor and Utilities for basic autonomous robot
 Home-page: https://github.com/GabeCasciano/Capstone20
 Author: Gabriel Casciano
 Author-email: gabecasciano@gmail.com

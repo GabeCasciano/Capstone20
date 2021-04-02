@@ -105,6 +105,11 @@ class GPS_Interface(Thread):
         self.__do_new_data_flag()
 
     # run funtions
+    def start(self) -> None:
+        super(GPS_Interface, self).start()
+        self.running = True
+        self._new_data_flag = False
+
     def run(self) -> None:
         self.__gps_serial.open()
 
