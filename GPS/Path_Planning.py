@@ -21,8 +21,17 @@ class PathPlanning(Thread):
         bearing = 20
         sample_time = 2 # 50 is arbitrary value -> calibrate real value
 
+        if bearing < 90:
+            theta = 90 - bearing
+        elif bearing < 180:
+            theta = bearing - 90
+        elif bearing < 270:
+            theta = theta = 270 - bearing
+        else:
+            theta = bearing - 270
+
         # initial velocity vector                                                                                                 
-        m = tan(math.radians(90 - bearing)) # double check
+        m = tan(math.radians(theta)) # double check
         b = current_y - m * current_x
         d = speed * sample_time
         
@@ -33,7 +42,15 @@ class PathPlanning(Thread):
         return future_point
     
     
-    def add_waypoint(self, lng, lat): #implement as part of segmentation
+    def add_waypoint(self, lng, lat): 
+        self.path.add_segment(lng, lat)
+        seg = self.path.get_segments()
+        
+        i = 1
+        for segment in seg:
+            print("Segment: ", i)
+            print('(',segment.p1.x, ",", segment.p1.y,') to (',segment.p2.x, ",", segment.p2.y,')') 
+            i+=1
         return 0
 
 
@@ -44,7 +61,7 @@ class PathPlanning(Thread):
 
     def get_location(self):
         #location_p = self.path.get_relative_point(self.GPS.get_longitude(), self.GPS.get_latitude())
-        location_p = self.path.get_relative_point(3, 7)
+        location_p = self.path.get_relative_point(2, 6)
 
         return location_p
 
@@ -171,7 +188,6 @@ class Segment():
 
 
 class Path():
-    GPS = GPS_Interface()
 
     def get_slope(self, desired_lng, desired_lat):
         m = (desired_lng-self.initial_lng)/(desired_lat-self.initial_lat)
@@ -193,11 +209,22 @@ class Path():
         return Point(rel_x, rel_y)
 
 
-    def add_segment(self, p): # not complete
+    def add_segment(self, lng, lat): 
+        p = self.get_relative_point(lng, lat)
+        i = 0
         for segment in self.segments:
             if p.x > segment.p1.x and p.x < segment.p2.x:
                 # create and add new segment at this point
+                s1 = Segment(segment.p1, p)
+                s2 = Segment(p, segment.p2)
+
+                self.segments.remove(segment)
+                self.segments.insert(i, s1)
+                self.segments.insert(i+1, s2)
+                
                 return
+
+            i += 1
 
 
     # getters
@@ -218,11 +245,10 @@ class Path():
         initial_segment = Segment(relative_initial_point, relative_destination)
         self.segments.append(initial_segment)
        
-       # generate points along path -> will probably remove this
-        # m = self.get_slope(dest_lng, dest_lat)
-        # d = self.GPS.get_distance_to([dest_lng, dest_lat])
-        # self.points = self.generate_path(m, d)
 
 path = PathPlanning(15,5)
+path.add_waypoint(4, 5)
+
 target_loc = path.follow_path()
+
 print("Correction vector: ", target_loc)
