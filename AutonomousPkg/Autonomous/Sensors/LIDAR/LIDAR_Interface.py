@@ -77,7 +77,7 @@ class LIDAR_Interface(Thread):
     @max_distance.setter
     def max_distance(self, distance: int):
         if distance > self._min_distance:
-            if distance < 15:
+            if distance < 5000:
                 self._max_distance = distance
 
     @property
