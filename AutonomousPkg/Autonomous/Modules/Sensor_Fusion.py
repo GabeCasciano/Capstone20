@@ -102,6 +102,10 @@ class Sensor_Fusion(Thread):
     def position_components(self) -> tuple:
         return
 
+    @property
+    def running(self):
+        return self.__running
+
     # control functions
     def calibrate(self) -> bool:
         pass

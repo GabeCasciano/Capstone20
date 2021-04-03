@@ -11,7 +11,7 @@ class Obstacle_Detection(Thread):
         super(Obstacle_Detection, self).__init__()
 
         self.__running = False
-        self.__obstacle_flag = True
+        self.__obstacle_flag = False
         self.__obstacle = (0, 0) # this can be an np array if need be
 
     def stop_thread(self):
