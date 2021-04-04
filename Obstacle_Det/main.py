@@ -22,11 +22,8 @@ def update_line():
     thres_col2 = thres[:, 2].reshape(-1, 1)
     # add segment value column to offset array to plot
     offsets = np.append(offsets, thres_col2, axis=1)
-    # with open("test.csv", "wb") as f:
-    # f.write(b'Angle, Distance, Seg Num \n')
     np.savetxt('lidar_data.csv', offsets, delimiter=',', fmt='%1.5f')
-    # ident = struct_ident(offsets)
-    # line.set_offsets(offsets)
+
 
 
 

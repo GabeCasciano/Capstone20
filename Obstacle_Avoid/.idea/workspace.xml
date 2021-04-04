@@ -2,9 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6bdae0c4-429c-4cc8-b742-68bd7eae93f0" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../Obstacle_Det/obs_det.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lidar_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/lidar_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Obstacle_Det/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Obstacle_Det/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,6 +25,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Obstacle_Det" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
@@ -69,7 +71,8 @@
       <workItem from="1616531186027" duration="596000" />
       <workItem from="1616532147691" duration="156000" />
       <workItem from="1616532627277" duration="599000" />
-      <workItem from="1616595202139" duration="22613000" />
+      <workItem from="1616595202139" duration="25307000" />
+      <workItem from="1617395175687" duration="4905000" />
     </task>
     <servers />
   </component>
@@ -77,32 +80,36 @@
     <option name="version" value="3" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1322" height="344" key="GridCell.Tab.0.bottom" timestamp="1616770036498">
+    <state x="-889" y="136" key="FileChooserDialogImpl" timestamp="1617402915440">
       <screen x="-1360" y="0" width="1360" height="728" />
     </state>
-    <state width="1322" height="344" key="GridCell.Tab.0.bottom/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1616770036498" />
+    <state x="-889" y="136" key="FileChooserDialogImpl/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1617402915440" />
+    <state width="1323" height="155" key="GridCell.Tab.0.bottom" timestamp="1616785721783">
+      <screen x="0" y="0" width="1366" height="728" />
+    </state>
+    <state width="1317" height="295" key="GridCell.Tab.0.bottom/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1616773479027" />
     <state width="1323" height="220" key="GridCell.Tab.0.bottom/0.0.1366.728/-1360.0.1360.728@0.0.1366.728" timestamp="1616721037924" />
-    <state width="1323" height="179" key="GridCell.Tab.0.bottom/0.0.1366.728@0.0.1366.728" timestamp="1616709707702" />
-    <state width="1322" height="344" key="GridCell.Tab.0.center" timestamp="1616770036497">
-      <screen x="-1360" y="0" width="1360" height="728" />
+    <state width="1323" height="155" key="GridCell.Tab.0.bottom/0.0.1366.728@0.0.1366.728" timestamp="1616785721783" />
+    <state width="1323" height="155" key="GridCell.Tab.0.center" timestamp="1616785721783">
+      <screen x="0" y="0" width="1366" height="728" />
     </state>
-    <state width="1322" height="344" key="GridCell.Tab.0.center/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1616770036497" />
+    <state width="1317" height="295" key="GridCell.Tab.0.center/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1616773479026" />
     <state width="1323" height="220" key="GridCell.Tab.0.center/0.0.1366.728/-1360.0.1360.728@0.0.1366.728" timestamp="1616721037924" />
-    <state width="1323" height="179" key="GridCell.Tab.0.center/0.0.1366.728@0.0.1366.728" timestamp="1616709707702" />
-    <state width="1322" height="344" key="GridCell.Tab.0.left" timestamp="1616770036497">
-      <screen x="-1360" y="0" width="1360" height="728" />
+    <state width="1323" height="155" key="GridCell.Tab.0.center/0.0.1366.728@0.0.1366.728" timestamp="1616785721783" />
+    <state width="1323" height="155" key="GridCell.Tab.0.left" timestamp="1616785721783">
+      <screen x="0" y="0" width="1366" height="728" />
     </state>
-    <state width="1322" height="344" key="GridCell.Tab.0.left/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1616770036497" />
+    <state width="1317" height="295" key="GridCell.Tab.0.left/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1616773479026" />
     <state width="1323" height="220" key="GridCell.Tab.0.left/0.0.1366.728/-1360.0.1360.728@0.0.1366.728" timestamp="1616721037924" />
-    <state width="1323" height="179" key="GridCell.Tab.0.left/0.0.1366.728@0.0.1366.728" timestamp="1616709707702" />
-    <state width="1322" height="344" key="GridCell.Tab.0.right" timestamp="1616770036498">
-      <screen x="-1360" y="0" width="1360" height="728" />
+    <state width="1323" height="155" key="GridCell.Tab.0.left/0.0.1366.728@0.0.1366.728" timestamp="1616785721783" />
+    <state width="1323" height="155" key="GridCell.Tab.0.right" timestamp="1616785721783">
+      <screen x="0" y="0" width="1366" height="728" />
     </state>
-    <state width="1322" height="344" key="GridCell.Tab.0.right/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1616770036498" />
+    <state width="1317" height="295" key="GridCell.Tab.0.right/0.0.1366.728/-1360.0.1360.728@-1360.0.1360.728" timestamp="1616773479026" />
     <state width="1323" height="220" key="GridCell.Tab.0.right/0.0.1366.728/-1360.0.1360.728@0.0.1366.728" timestamp="1616721037924" />
-    <state width="1323" height="179" key="GridCell.Tab.0.right/0.0.1366.728@0.0.1366.728" timestamp="1616709707702" />
+    <state width="1323" height="155" key="GridCell.Tab.0.right/0.0.1366.728@0.0.1366.728" timestamp="1616785721783" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Obstacle_Avoid$main.coverage" NAME="main Coverage Results" MODIFIED="1616770036481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Obstacle_Avoid$main.coverage" NAME="main Coverage Results" MODIFIED="1616773479010" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

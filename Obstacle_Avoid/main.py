@@ -44,7 +44,7 @@ def obs_avoid():
     # print("Slope", m)
 
     # 2. Optimal Travelling Angle
-    theta = math.radians(math.atan((y_dest - yref) / (x_dest - xref)))  # optimal travelling angle
+    theta = abs(math.radians(math.atan((y_dest - yref) / (x_dest - xref))))  # optimal travelling angle
     print("Optimal Travelling Angle in radians: ", theta)
 
     # # dist1
@@ -63,7 +63,7 @@ def obs_avoid():
 
     for j in range(0, len(y_obs)):
         # obstacle not detected
-        if (y_obs[j] - yref) > max_dist: # this needs to change
+        if (y_obs[j] - yref) > max_dist: # this needs to change, make an obstacle detected function
             for i in range(j, j + 1):
                 if y_obs[j] > dist_dest:
                     if diff == 0:
@@ -81,13 +81,13 @@ def obs_avoid():
             # set temp path
             alpha_temp = 90
             alpha_temp = np.radians(alpha_temp)
-            orient_angle2 = orient_angle + alpha_temp
+            orient_angle2 = theta + alpha_temp
 
             diff_2 = alpha_temp - theta
             if y_obs[j] > dist_dest:
-                if diff > 0:
+                if diff_2 > 0:
                     orient_angle2 = alpha_temp + diff_2
-                elif diff < 0:
+                elif diff_2 < 0:
                     orient_angle2 = alpha_temp - diff_2
                 flag = 1
             else:
