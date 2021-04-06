@@ -35,27 +35,30 @@ class Obstacle_Detection(Thread):
         self.__obstacle = (0, 0)  # reset the __obstacle var
 
 
-    def range_filter(scans, min_distance, max_distance): # not sure if there needs to be a self here?
+    def range_filter(self, scans, min_distance, max_distance): # not sure if there needs to be a self here?
         x = scans[:, 1]
         for i in range(len(x)):
             if x[i] < min_distance:
                 x[i] = 0
             elif x[i] > max_distance:
                 x[i] = 0
+
+        x = np.asarray(x)
+        x = np.transpose(x)
         return x
 
 
-    def segmentation(scans, seg_threshold): # not sure if there needs to be a self here?
+    def segmentation(self, scans, seg_threshold): # not sure if there needs to be a self here?
         i = 1  # incremental num
-        temp = scans[:, 1]
-        thres = np.zeros((len(temp), 3))
-        thres[:, 0] = temp
-        x = [temp[len(temp) - 1]]
+        temp_val = scans[:, 1]
+        segment = np.zeros((len(temp_val), 3))
+        segment[:, 0] = temp_val
+        x = [temp_val[len(temp_val) - 1]]
         np.asarray(x)
-        temp = np.append(temp, x, axis=0)
-        thres[:, 1] = abs(np.diff(temp, axis=0))
+        temp_val = np.append(temp_val, x, axis=0)
+        segment[:, 1] = abs(np.diff(temp_val, axis=0))
         # conditions where segment threshold > 20 mm, can be changed
-        cond_1 = thres[:, 1] > seg_threshold
+        cond_1 = segment[:, 1] > seg_threshold
         check = np.where(cond_1, 2, 1)  # check where its true or false
         check = check.reshape(-1, 1)
         iter_seg = 1
@@ -65,17 +68,19 @@ class Obstacle_Detection(Thread):
                 check[k] = iter_seg
             elif check[k] == 1:  # false: diff between 2 distances is less than threshold
                 check[k] = iter_seg  # same segment
-        thres[:, 2] = check[:, 0]
+        segment[:, 2] = check[:, 0]
 
-        return thres
+        segment = segment[:, 2].reshape(-1, 1)
+
+        return segment
 
     # class properties
-    @property
-    def obstacle_detected_flag(self):
-        return self.__obstacle_flag
+    # @property
+    # def obstacle_detected_flag(self):
+    #     return self.__obstacle_flag
 
     @property
-    def detected_obstacle(self): # returns the closest obstacle (position, angle)
+    def detected_obstacle(self): # returns [angle, dist, segment number]
         return self.__obstacle
 
     @property
@@ -103,17 +108,15 @@ class Obstacle_Detection(Thread):
     def run(self) -> None:
         while self.__running:
             # run the obstacle detection algorithm
+
             scan = next(self._iter_scan)
             __obstacle = np.array([(np.radians(point[1]), point[2]) for point in scan])
             x = self.range_filter(__obstacle, 0, 5000)
-            x = np.asarray(x)  # saves array as rows
-            x = np.transpose(x)  # transpose to col
             __obstacle[:, 1] = x
             __obstacle = __obstacle[np.all(__obstacle != 0, axis=1)]  # removes rows with 0s
-            thres = self.segmentation(__obstacle, 20)  # distance threshold function
-            thres_col2 = thres[:, 2].reshape(-1, 1)
+            segment = self.segmentation(__obstacle, 20)  # distance threshold function
             # add segment value column to offset array to plot
-            __obstacle = np.append(__obstacle, thres_col2, axis=1)
+            __obstacle = np.append(__obstacle, segment, axis=1)
 
             pass
 
