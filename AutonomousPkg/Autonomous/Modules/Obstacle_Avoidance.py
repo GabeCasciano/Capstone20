@@ -17,7 +17,7 @@ class Obstacle_Avoidance:
         self.x_ref = self.SF.gps_latitude()
         self.y_ref = self.SF.gps_longitude()
         self.__obstacle = self.Obs_Det.detected_obstacle
-        self.x_dest = self.PP.destination_lat
+        self.x_dest = self.PP._dest_lat
         self.y_dest = self.PP.destination_long
 
         self.__obstacle_flag = False
