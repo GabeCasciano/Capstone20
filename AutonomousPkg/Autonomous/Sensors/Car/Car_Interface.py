@@ -1,10 +1,14 @@
 import serial
 from threading import *
+import time
 
 class Car_Interface(Thread):
 
     _LLED_CMD = 'L'
     _RLED_CMD = 'R'
+    _ALED_CMD = 'A'
+    _FLED_CMD = 'F'
+    _EXIT_CMD = 'E'
     _M_CMD = 'M'
     _S_CMD = 'S'
     _BOOL_T = 'T'
@@ -35,6 +39,7 @@ class Car_Interface(Thread):
         self.__steering_angle = 0
 
     def stop_thread(self):
+        self._exit_cmd()
         self.__running = False
 
     @property
@@ -69,6 +74,14 @@ class Car_Interface(Thread):
             self.__motor_speed = Car_Interface._MAX_SPEED
 
         txt = Car_Interface._M_CMD + str(self.__motor_speed) + self._BOOL_F
+        self.__serial.write(txt.encode(encoding="ASCII"))
+
+    def flash_led(self):
+        txt = Car_Interface._FLED_CMD + Car_Interface._ALED_CMD
+        self.__serial.write(txt.encode(encoding="ASCII"))
+
+    def _exit_cmd(self):
+        txt = Car_Interface._EXIT_CMD
         self.__serial.write(txt.encode(encoding="ASCII"))
 
     @property
@@ -114,7 +127,10 @@ class Car_Interface(Thread):
     def start(self) -> None:
         super(Car_Interface, self).start()
         self.__serial.open()
+
+        time.sleep(5)
         self.__running = True
+
         self._do_handshake()
 
     def run(self) -> None:
