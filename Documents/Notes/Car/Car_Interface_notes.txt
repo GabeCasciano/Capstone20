@@ -1,0 +1,38 @@
+Car udp listener process:
+
+1. start-up
+   - disable all systems
+   - get system health
+   - prepare udp listener
+
+2. wait
+   - wait for command
+   - reset watch dog flag
+
+3. action/ respond
+    - parse data commands
+    - maintain watch dog
+    - if timeout throw watch dog flag and set stop
+    - health and data request do not clear watch dog flag
+
+
+Car udp sender/controller process:
+
+1. initialize thread
+    - init all thread and system data
+    - connect to car and poll for system health
+
+2. begin control
+    - send command data to car
+    - maintain communication rate within cars watch dog timer
+
+3. stop control
+    - let car timeout or issue stop command
+
+
+Might need to get fancy with sending and recving the cars battery level as a decimal:
+    - round to int (lame)
+    - use 2 bytes
+        - first byte is V
+        - second byte is 10 * mV
+        - voltage = V + (10 * mv)
