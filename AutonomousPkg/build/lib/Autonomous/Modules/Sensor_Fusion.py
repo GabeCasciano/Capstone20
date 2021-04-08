@@ -128,6 +128,8 @@ class Sensor_Fusion(Thread):
         self.__global_acceleration_vector = np.array(["NaN", "NaN"], np.float32)
         self.__global_velocity_vector = np.array(["NaN", "NaN"], np.float32)
         self.__global_position_vector = np.array(["NaN", "NaN"], np.float32)
+        
+        super(Sensor_Fusion, self).start()
 
     def run(self) -> None:
         pass

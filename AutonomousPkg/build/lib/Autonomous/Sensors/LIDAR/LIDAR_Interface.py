@@ -29,7 +29,7 @@ class LIDAR_Interface(Thread):
         self.__scan_rate = scan_rate
         self.__samples_per_rev = LIDAR_Interface._GENERATOR_BUFF_SIZE # this may change after testing
 
-        self.__iter = self.__lidar.iter_scans(self.__samples_per_rev)
+        self.__iter_scan = self.__lidar.iter_scans(self.__samples_per_rev)
 
         self.__stack = Stack(stack_depth)
         self.__current_scan = []
@@ -149,8 +149,8 @@ class LIDAR_Interface(Thread):
             # iter must produce a full rotation (360 points) before we can use it
             #_scan = self.__lidar.iter_scans(min_len=self.__samples_per_rev)
 
-            if self.__iter.__sizeof__() > 0:
-                _scan = next(self.__iter)
+            if self.__iter_scan.__sizeof__() > 0:
+                _scan = next(self.__iter_scan)
                 for scan in _scan:
                     current = Ray(scan[2], scan[1], scan[0])
                     if current.radius > self._min_distance:

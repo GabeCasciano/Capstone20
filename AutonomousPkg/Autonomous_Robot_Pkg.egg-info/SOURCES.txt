@@ -6,12 +6,12 @@ Autonomous/__init__.py
 Autonomous/Modules/FSM.py
 Autonomous/Modules/Obstacle_Avoidance.py
 Autonomous/Modules/Obstacle_Detection.py
-Autonomous/Modules/Path_Following.py
 Autonomous/Modules/Path_Planning.py
 Autonomous/Modules/Sensor_Fusion.py
 Autonomous/Modules/__init__.py
 Autonomous/Sensors/__init__.py
 Autonomous/Sensors/Car/Car_Interface.py
+Autonomous/Sensors/Car/Car_Test.py
 Autonomous/Sensors/Car/__init__.py
 Autonomous/Sensors/GPS/GPS_Interface.py
 Autonomous/Sensors/GPS/GPS_Server.py
