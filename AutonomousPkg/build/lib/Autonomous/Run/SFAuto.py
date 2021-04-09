@@ -9,8 +9,8 @@ import time
 from math import cos, sin, tan, sqrt, radians
 
 def main():
-    car = Car_Interface(loc="/dev/ttyUSB0")
-    imu = IMU_Interface(loc="/dev/ttyUSB1")
+    car = Car_Interface(loc="/dev/ttyUSB2")
+    imu = IMU_Interface(loc="/dev/ttyUSB0")
     gps = GPS_Interface(loc="/dev/ttyACM0")
 
     sf = Sensor_Fusion(IMU=imu, GPS=gps)
@@ -54,3 +54,4 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("Stopping")
+        exit(1)

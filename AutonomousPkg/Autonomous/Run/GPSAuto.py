@@ -8,6 +8,9 @@ import time
 
 
 def main():
+
+    print("Starting all interfaces")
+
     car = Car_Interface(loc="/dev/ttyUSB2")
     imu = IMU_Interface(loc="/dev/ttyUSB0")
     gps = GPS_Interface(loc="/dev/ttyACM0")
@@ -20,10 +23,12 @@ def main():
     fk_lat = 43.180208
     fk_long = -79.790125
 
+    time.sleep(5)  # allow everything to start
+
     lat = float(input("Destination lat"))
     long = float(input("Destination long"))
 
-    time.sleep(1) # allow everything to start
+
 
     #pp = Path_Planning(long, lat, sf)
 
@@ -45,10 +50,14 @@ def main():
             if abs(dif_angle) > 1:  # 1 degree of tolerance (car can't steer to that accuracy anyways)
                 car.steering_angle = dif_angle
                 car.motor_speed = 50
+                car.left_led = True
+                car.right_led = False
             else:
                 # drive straight
                 car.steering_angle = 0
                 car.motor_speed = 100
+                car.left_led = False
+                car.right_led = True
         else:
             print("Done")
             car.motor_speed = 0
@@ -64,5 +73,6 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print("Stopping")
+        exit(1)
 
 
