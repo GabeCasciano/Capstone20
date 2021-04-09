@@ -104,12 +104,12 @@ void _set_steering_angle(int8_t _angle, bool _brake){
     if(val > 5){
         digitalWrite(STEERING_REV, LOW);
         analogWrite(STEERING_FWD, 128 - STR_SPEED);
-        Serial.print("fwd");
+        //Serial.print("fwd");
     }
     else if(val < -5){
         digitalWrite(STEERING_FWD, LOW);
         analogWrite(STEERING_REV, 128 - STR_SPEED);
-        Serial.print("rev");
+        //Serial.print("rev");
     }
     else{
         analogWrite(STEERING_REV, 1);
@@ -123,8 +123,8 @@ void _set_steering_angle(int8_t _angle, bool _brake){
             digitalWrite(STEERING_REV, LOW);
         }
     }
-    Serial.print("diff");
-    Serial.println(val);
+    //Serial.print("diff");
+    //Serial.println(val);
 }
 
 void set_steering_angle(motor_cmd cmd){

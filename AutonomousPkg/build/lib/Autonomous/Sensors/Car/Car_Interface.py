@@ -52,7 +52,7 @@ class Car_Interface(Thread):
 
     @steering_angle.setter
     def steering_angle(self, angle: int):
-        self.__steering_angle = angle
+        self.__steering_angle = int(angle)
         if angle >= Car_Interface._MAX_ANGLE:
             self.__steering_angle = Car_Interface._MAX_ANGLE
         if angle <= Car_Interface._MIN_ANGLE:
@@ -67,7 +67,7 @@ class Car_Interface(Thread):
 
     @motor_speed.setter
     def motor_speed(self, speed: int):
-        self.__motor_speed = speed
+        self.__motor_speed = int(speed)
         if Car_Interface._MIN_SPEED >= speed:
             self.__motor_speed = Car_Interface._MIN_SPEED
         if Car_Interface._MAX_SPEED <= speed:

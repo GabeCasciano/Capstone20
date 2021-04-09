@@ -41,7 +41,7 @@ class Path_Planning:
         print("Current Location: ", self.print_point(current_location))
 
         # Add arival check here
-        
+
         
         future_location = self.predict_location(current_location.x, current_location.y)
         print("Future Location: ", self.print_point(future_location))
@@ -89,7 +89,7 @@ class Path_Planning:
 
 
     def get_location(self):
-        location_p = self.path.get_relative_point(self.SF.gps_longitude(), self.SF.gps_latitud())
+        location_p = self.path.get_relative_point(self.SF.gps_longitude, self.SF.gps_latitude)
         return location_p
 
 

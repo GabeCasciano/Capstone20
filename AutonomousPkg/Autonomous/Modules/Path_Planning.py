@@ -89,7 +89,7 @@ class Path_Planning:
 
 
     def get_location(self):
-        location_p = self.path.get_relative_point(self.SF.gps_longitude(), self.SF.gps_latitud())
+        location_p = self.path.get_relative_point(self.SF.gps_longitude, self.SF.gps_latitude)
         return location_p
 
 

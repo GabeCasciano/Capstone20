@@ -30,22 +30,20 @@ class CarJoy(Thread):
         super(CarJoy, self).start()
 
     def exit_car(self):
-        self.car._exit_cmd()
-        exit(0)
+        self.stop_thread()
+        if self.car.running:
+            self.car._exit_cmd()
 
     def connect_to_car(self):
         if not self.car.running:
             self.car.start()
 
     def run(self) -> None:
-        print("Started loop")
         while self.running:
             pygame.event.pump()
             self.car.motor_speed = (self.controller.Right_Trigger + 1) * 64
             self.car.steering_angle = self.controller.Left_Stick_X * 30
-            #self.car.left_led = self.controller.Left_Bumper
-            #self.car.right_led = self.controller.Right_Bumper
-            print("Speed:", self.controller.Left_Trigger,"steering:", self.car.steering_angle)
+            print("Speed:", self.car.motor_speed,"steering:", self.car.steering_angle)
 
 
 class ManualWindow(tk.Frame):
@@ -70,15 +68,19 @@ class ManualWindow(tk.Frame):
 
     def _enable_car(self):
         self._joy_thread.start()
+        print("Starting Controller")
 
     def _stop_car(self):
         self._joy_thread.stop_thread()
+        print("Stopping controller")
 
     def _exit_car(self):
         self._joy_thread.exit_car()
+        exit(1)
 
     def _connect_to_car(self):
         self._joy_thread.connect_to_car()
+        print("Connecting to car")
 
 if __name__ == "__main__":
 

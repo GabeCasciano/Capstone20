@@ -1,6 +1,6 @@
 from serial import Serial, tools
 from threading import *
-from math import radians, cos, sin, asin, atan, sqrt
+from math import radians, cos, sin, asin, atan, sqrt, degrees
 from time import *
 from datetime import datetime
 import atexit
@@ -10,7 +10,7 @@ class GPS_Interface(Thread):
 
     _NMEA_VALID_COMMANDS = ["GPGLL", "GPRMC", "GPTRF", "GPVBW", "GPVTG"]
     KNOTS_TO_KM = 1.852
-    RADIUS_OF_EARTH = 6371
+    RADIUS_OF_EARTH = 6371e3
 
     def __init__(self, loc: str = '/dev/ttyACM0', baud: int = 4800):
         self.__gps_serial = Serial()
@@ -140,6 +140,7 @@ class GPS_Interface(Thread):
 
     @property
     def position(self) -> list:
+        self._new_data_flag = False
         return [self._latitude, self._longitude]
 
     @property
@@ -174,7 +175,7 @@ class GPS_Interface(Thread):
         delta_lat = lat1-lat2
         delta_lon = lon1-lon2
 
-        a = sin(delta_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2)
+        a = sin(delta_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2) ** 2
         c = 2 * asin(sqrt(a))
         return c * GPS_Interface.RADIUS_OF_EARTH
 

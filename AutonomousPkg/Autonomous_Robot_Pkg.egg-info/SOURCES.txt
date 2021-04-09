@@ -11,9 +11,7 @@ Autonomous/Modules/Path_Planning.py
 Autonomous/Modules/Sensor_Fusion.py
 Autonomous/Modules/__init__.py
 Autonomous/Run/FullAuto.py
-Autonomous/Run/GPSAuto.py
 Autonomous/Run/ManualControl.py
-Autonomous/Run/ManualControl2.py
 Autonomous/Run/SFAuto.py
 Autonomous/Run/__init__.py
 Autonomous/Sensors/__init__.py
