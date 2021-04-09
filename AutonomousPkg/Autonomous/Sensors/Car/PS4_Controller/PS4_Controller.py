@@ -15,8 +15,9 @@ class PS4_Controller(Thread):
 
     def __init__(self, deadzone: float = 0.1):
         super(PS4_Controller, self).__init__()
-        self.running = True
+        self.__running = False
 
+        pygame.init()
         pygame.joystick.init()
 
         if pygame.joystick.get_count() > 0:
@@ -45,7 +46,7 @@ class PS4_Controller(Thread):
     def _check_dpad(self, type: int, direction: int):
         if type == PS4_Controller._ON_PRESSED:
             return self._dpad_prev[direction] != self._dpad[direction] and self._dpad[direction]
-        elif type == PS4_Controller._ON_PRESSED:
+        elif type == PS4_Controller._ON_RELASED:
             return self._dpad_prev[direction] != self._dpad[direction] and not self._dpad[direction]
         else:
             return self._dpad[direction]
@@ -59,16 +60,16 @@ class PS4_Controller(Thread):
                 return 0
 
     def stop_thread(self):
-        self.running = False
+        self.__running = False
 
     # class properties
     @property
     def Left_Trigger(self):
-        return self._joystick.get_axis(5)
+        return self._joystick.get_axis(2)
 
     @property
     def Right_Trigger(self):
-        return self._joystick.get_axis(4)
+        return self._joystick.get_axis(5)
 
     @property
     def Left_Stick_X(self):
@@ -167,20 +168,28 @@ class PS4_Controller(Thread):
     def Y_Axis(self):
         return PS4_Controller._Y_AXIS
 
+    @property
+    def running(self):
+        return self.__running
+
     # Thread functions
     def start(self) -> None:
-        self.running = True
+        super(PS4_Controller, self).start()
+
+        self.__running = True
+
+        for i in range(self._joystick.get_numbuttons()):
+            self._buttons.append(self._joystick.get_button(i))
 
     def run(self) -> None:
-        while self.running:
+        while self.__running:
             pygame.event.pump()
 
             self._buttons_prev = self._buttons.copy()
             self._dpad_prev = self._dpad.copy()
 
-            self._buttons = []
             for i in range(self._joystick.get_numbuttons()):
-                self._buttons.append(self._joystick.get_button(i))
+                self._buttons[i] = self._joystick.get_button(i)
 
             self._dpad = []
             temp = self._joystick.get_hat(0)

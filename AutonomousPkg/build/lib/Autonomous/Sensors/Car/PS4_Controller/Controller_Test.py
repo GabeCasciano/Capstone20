@@ -47,6 +47,7 @@ def main():
         pygame.draw.rect(screen, right_clr, right_rect)
         pygame.display.flip()
 
+
 if __name__ == '__main__':
     try:
         main()

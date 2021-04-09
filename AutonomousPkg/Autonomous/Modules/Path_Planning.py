@@ -41,7 +41,7 @@ class Path_Planning:
         print("Current Location: ", self.print_point(current_location))
 
         # Add arival check here
-        
+
         
         future_location = self.predict_location(current_location.x, current_location.y)
         print("Future Location: ", self.print_point(future_location))
