@@ -140,20 +140,20 @@ class Sensor_Fusion(Thread):
                 self.__global_position_vector[1] = sin(angle) * mag
 
                 self.__velocity_vector = np.array([0, 0], np.float32) # clear velocity logger
-            else:  # if there is no gps data waiting, use the IMU
-                # read the acceleration from the IMU, account for direction
-                self.__global_acceleration_vector[0] = self.__imu.lin_accel[0] * cos(self.__imu.angular_pos[2])
-                self.__global_acceleration_vector[1] = self.__imu.lin_accel[1] * sin(self.__imu.angular_pos[2])
 
-                # read the orientation from the IMU, relative to the initial calibration
-                self.__global_orientation = self.__imu.angular_pos[2]
+            # read the acceleration from the IMU, account for direction
+            self.__global_acceleration_vector[0] = self.__imu.lin_accel[0] * cos(self.__imu.angular_pos[2])
+            self.__global_acceleration_vector[1] = self.__imu.lin_accel[1] * sin(self.__imu.angular_pos[2])
 
-                # Calculate velocity logger
-                self.__velocity_vector += self.__global_acceleration_vector * (time.perf_counter() - self.__v_log_start)
-                self.__global_velocity_vector = self.__velocity_vector.copy()
+            # read the orientation from the IMU, relative to the initial calibration
+            self.__global_orientation = self.__imu.angular_pos[2]
 
-                # if the glbl pos has been initialized, calculate the position vector correction
-                if self.__global_position_vector[0] != "NaN":
-                    self.__global_position_vector += self.__velocity_vector * (time.perf_counter() - self.__v_log_start)
+            # Calculate velocity logger
+            self.__velocity_vector += self.__global_acceleration_vector * (time.perf_counter() - self.__v_log_start)
+            self.__global_velocity_vector = self.__velocity_vector.copy()
 
-                self.__v_log_start = time.perf_counter()
+            # if the glbl pos has been initialized, calculate the position vector correction
+            if self.__global_position_vector[0] != "NaN":
+                self.__global_position_vector += self.__velocity_vector * (time.perf_counter() - self.__v_log_start)
+
+            self.__v_log_start = time.perf_counter()
