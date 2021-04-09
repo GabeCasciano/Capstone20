@@ -17,6 +17,8 @@ def main():
 
     sf = Sensor_Fusion(IMU=imu, GPS=gps)
 
+    imu.start()
+    gps.start()
     car.start()
     sf.start()
 
