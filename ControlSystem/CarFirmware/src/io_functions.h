@@ -1,8 +1,6 @@
 #include <Arduino.h>
-
-#ifndef NAME
 #include <constants.h>
-#endif
+#include <pid.h>
 
 typedef struct _motor_cmd_t{
   int8_t motor_speed;
@@ -13,6 +11,8 @@ typedef struct _motor_cmd_t{
 typedef struct _led_cmd_t{
     bool left, right, flashing;
 }led_cmd;
+
+pid_vals steering_pid;
 
 void all_off(){
   digitalWrite(LEFT_LED, LOW);
@@ -62,15 +62,17 @@ void _set_motor_speed(int8_t _speed, bool _brake){
     if(_m_out >= MAX_MOTOR_SPEED)
         _m_out = MAX_MOTOR_SPEED;
 
-    if(_speed > 0){
+    if(_speed > 1){
         digitalWrite(MOTOR_REV, LOW);
         analogWrite(MOTOR_FWD, _m_out);
     }
-    else if(_speed < 0){
+    else if(_speed < -1){
         digitalWrite(MOTOR_FWD, LOW);
         analogWrite(MOTOR_REV, _m_out);
     }
     else{
+        analogWrite(MOTOR_REV, 1);
+        analogWrite(MOTOR_FWD, 1);
         if(_brake){
             digitalWrite(MOTOR_REV, HIGH);
             digitalWrite(MOTOR_FWD, HIGH);
@@ -88,11 +90,41 @@ void set_motor_speed(motor_cmd _cmd){
         _set_motor_speed(_cmd.motor_speed, _cmd.motor_mode);
 }
 
-
+void init_pid(){
+    steering_pid.max_in = MAX_STEERING_SIG * STR_SF;
+    steering_pid.max_out = MAX_STEERING_SPEED;
+    steering_pid.min_in = MIN_STEERING_SIG * STR_SF;
+    steering_pid.min_out = MIN_MOTOR_SPEED;
+}
 
 void _set_steering_angle(int8_t _angle, bool _brake){
-    //if(_angle >= )
+    int temp = map(_angle, MIN_STEERING_ANGLE, MAX_STEERING_ANGLE, MIN_STEERING_SIG, MAX_STEERING_SIG);
+    int val = temp - analogRead(STEERING_IN) ;
+    
+    if(val > 5){
+        digitalWrite(STEERING_REV, LOW);
+        analogWrite(STEERING_FWD, 128 - STR_SPEED);
+        Serial.print("fwd");
+    }
+    else if(val < -5){
+        digitalWrite(STEERING_FWD, LOW);
+        analogWrite(STEERING_REV, 128 - STR_SPEED);
+        Serial.print("rev");
+    }
+    else{
+        analogWrite(STEERING_REV, 1);
+        analogWrite(STEERING_FWD, 1);
 
+        if(_brake){
+            digitalWrite(STEERING_FWD, HIGH);
+            digitalWrite(STEERING_REV, HIGH);
+        }else{
+            digitalWrite(STEERING_FWD, LOW);
+            digitalWrite(STEERING_REV, LOW);
+        }
+    }
+    Serial.print("diff");
+    Serial.println(val);
 }
 
 void set_steering_angle(motor_cmd cmd){

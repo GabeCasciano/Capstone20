@@ -1,6 +1,9 @@
+#define DEBUG 1 // comment out for final build
+
 #include <Arduino.h>
 #include <constants.h>
 #include <io_functions.h>
+
 
 char buffer[PACKET_SIZE], mt_buffer[PACKET_SIZE];
 int _size;
@@ -28,17 +31,27 @@ void parse_serial_stream(){
     switch (cmd)
     {
       case 'L':
-        Serial.println("Left LED state");
         l_cmd.left = Serial.read() == 'T'?true:false;
+
+      #ifdef DEBUG
+        Serial.print("Left LED state: ");
+        Serial.println(l_cmd.left);
+      #endif
+
         break;
 
       case 'R':
-        Serial.println("Right LED state");
+        
         l_cmd.right = Serial.read() == 'T'?true:false;
+
+      #ifdef DEBUG
+        Serial.print("Right LED state: ");
+        Serial.println(l_cmd.right);
+      #endif
+
         break;
 
       case 'F':
-        Serial.println("Flashing LED");
         cmd = Serial.read();
         if(cmd == 'L')
           flash_left(FLASH_DURATION, NUM_FLASHES);
@@ -46,30 +59,50 @@ void parse_serial_stream(){
           flash_right(FLASH_DURATION, NUM_FLASHES);
         else if(cmd == 'A')
           flash_all(FLASH_DURATION, NUM_FLASHES);
+
+      #ifdef DEBUG
+        Serial.print("Flashing LED: ");
+        Serial.println(cmd);
+      #endif
+        
         break;
 
       case 'M':
-        Serial.println("Executing motor command");
-        
         m_cmd.motor_speed = Serial.parseInt();
         m_cmd.motor_mode = (Serial.read() == 'T')?true:false;
+
+      #ifdef DEBUG
+        Serial.print("Executing motor command:");
+        Serial.println(m_cmd.motor_speed);
+      #endif
+
         break;
 
       case 'S':
-        Serial.println("Executing steering command");
-
         m_cmd.steering_angle = Serial.parseInt();
         m_cmd.steering_mode = true;
+
+      #ifdef DEBUG
+        Serial.print("Executing steering command:");
+        Serial.println(m_cmd.steering_angle);
+      #endif
+
         break;
       
       case 'E':
-        Serial.println("disconnecting");
+        
         connected = false;
+
+      #ifdef DEBUG
+        Serial.println("disconnecting");
+      #endif
         break;
 
       default:
+      #ifdef DEBUG
         Serial.print("cmd no work: ");
         Serial.println(cmd);
+      #endif
         break;
     }
 
@@ -87,6 +120,11 @@ void setup() {
   
   pinMode(RIGHT_LED, OUTPUT);
   pinMode(LEFT_LED, OUTPUT);
+  pinMode(MOTOR_FWD, OUTPUT);
+  pinMode(MOTOR_REV, OUTPUT);
+  pinMode(MOTOR_EN, OUTPUT);
+  pinMode(STEERING_REV, OUTPUT);
+  pinMode(STEERING_FWD, OUTPUT);
 
   l_cmd.flashing = false;
   l_cmd.left = false;
@@ -99,7 +137,9 @@ void setup() {
 
   flash_all(FLASH_DURATION/2, NUM_FLASHES);
 
+#ifdef DEBUG
   Serial.println("Ready for connection");
+#endif
 
 }
 
@@ -124,10 +164,14 @@ void loop() {
     set_steering_angle(m_cmd);
   }
   else{
+    _set_motor_speed(0, false);
+
     delay(1000);
 
+  #ifdef DEBUG
     Serial.println("Waiting for connection");
-    
+  #endif
+
     flash_all(FLASH_DURATION, NUM_FLASHES);      
 
     delay(500);
@@ -139,8 +183,10 @@ void loop() {
       connected = true;
       set_left_state(false);
       set_right_state(false);
-  
+
+    #ifdef DEBUG
       Serial.println("Connection established");
+    #endif
 
       flash_all(FLASH_DURATION, NUM_FLASHES);      
     }

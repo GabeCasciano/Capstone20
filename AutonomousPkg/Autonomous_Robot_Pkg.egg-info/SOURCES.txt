@@ -13,6 +13,10 @@ Autonomous/Sensors/__init__.py
 Autonomous/Sensors/Car/Car_Interface.py
 Autonomous/Sensors/Car/Car_Test.py
 Autonomous/Sensors/Car/__init__.py
+Autonomous/Sensors/Car/PS4_Controller/ControllerVis.py
+Autonomous/Sensors/Car/PS4_Controller/Controller_Test.py
+Autonomous/Sensors/Car/PS4_Controller/PS4_Controller.py
+Autonomous/Sensors/Car/PS4_Controller/__init__.py
 Autonomous/Sensors/GPS/GPS_Interface.py
 Autonomous/Sensors/GPS/GPS_Server.py
 Autonomous/Sensors/GPS/GPS_Test.py
