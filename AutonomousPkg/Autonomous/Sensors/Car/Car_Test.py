@@ -11,19 +11,19 @@ if __name__ == "__main__":
     print("Starting Car")
     time.sleep(5)
 
-    # print("Indicating left led")
-    # car.left_led = True
-    # time.sleep(2.5)
-    # car.left_led = False
-    #
-    # time.sleep(1)
-    #
-    # print("Indicating right led")
-    # car.right_led = True
-    # time.sleep(2.5)
-    # car.right_led = False
-    #
-    # time.sleep(1)
+    print("Indicating left led")
+    car.left_led = True
+    time.sleep(2.5)
+    car.left_led = False
+
+    time.sleep(1)
+
+    print("Indicating right led")
+    car.right_led = True
+    time.sleep(2.5)
+    car.right_led = False
+
+    time.sleep(1)
 
     print("Flashing both lights")
     car.flash_led()
