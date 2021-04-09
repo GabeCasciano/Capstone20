@@ -8,7 +8,7 @@ import time
 
 
 def main():
-    car = Car_Interface(loc="/dev/ttyUSB2")
+    car = Car_Interface(loc="/dev/ttyUSB1")
     imu = IMU_Interface(loc="/dev/ttyUSB0")
     gps = GPS_Interface(loc="/dev/ttyACM0")
 

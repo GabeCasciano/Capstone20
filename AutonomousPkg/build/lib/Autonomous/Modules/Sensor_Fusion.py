@@ -118,15 +118,15 @@ class Sensor_Fusion(Thread):
         self.__global_acceleration_vector = np.array([0, 0], np.float32)
         self.__global_velocity_vector = np.array([0, 0], np.float32)
         self.__global_position_vector = np.array(["NaN", "NaN"], np.float32)
-        
-        super(Sensor_Fusion, self).start()
-
-    def run(self) -> None:
 
         self.__imu.do_calibration()
         self.__imu.set_lin_accel_rel()
         self.__imu.set_angular_vel_rel()
         self.__imu.set_angular_pos_rel()
+
+        super(Sensor_Fusion, self).start()
+
+    def run(self) -> None:
 
         while self.__running:
             # if there is gps data waiting, read it into the sf (dead reconing)

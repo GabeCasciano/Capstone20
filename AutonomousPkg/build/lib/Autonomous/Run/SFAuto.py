@@ -1,15 +1,16 @@
-from Autonomous.Sensors.IMU.IMU_Interface import IMU_Interface
 from Autonomous.Sensors.GPS.GPS_Interface import GPS_Interface
+from Autonomous.Sensors.IMU.IMU_Interface import IMU_Interface
 from Autonomous.Sensors.Car.Car_Interface import Car_Interface
+
+from Autonomous.Modules.Path_Planning import *
 from Autonomous.Modules.Sensor_Fusion import Sensor_Fusion
 
-from math import cos, sin, radians
 import time
-
+from math import cos, sin, tan, sqrt, radians
 
 def main():
-    car = Car_Interface(loc="/dev/ttyUSB1")
-    imu = IMU_Interface(loc="/dev/ttyUSB0")
+    car = Car_Interface(loc="/dev/ttyUSB0")
+    imu = IMU_Interface(loc="/dev/ttyUSB1")
     gps = GPS_Interface(loc="/dev/ttyACM0")
 
     sf = Sensor_Fusion(IMU=imu, GPS=gps)
@@ -17,46 +18,39 @@ def main():
     car.start()
     sf.start()
 
-    lat = float(input("Destination lat"))
-    long = float(input("Destination long"))
+    time.sleep(1)
 
-    time.sleep(1) # allow everything to start
+    lat = float(input("Destination lat:"))
+    long = float(input("Destination long:"))
 
-    #pp = Path_Planning(long, lat, sf)
+    path = Path_Planning(long, lat, sf)
+    dist = GPS_Interface.haversin(sf.gps_vector, [lat, long])  # calc distance remaining
 
     while True:
-        dist = GPS_Interface.haversin(sf.gps_vector, [lat, long])
-        angle = GPS_Interface.bearing_to(sf.gps_vector, [lat, long])
+        correction = path.follow_path()  # calculate the correction vector
 
-        # convert and compare the correction vector to the car direction
-        # turn until theta = 0, then drive towards the point
+        angle = tan(correction[1]/correction[0])  # convert cartesian into an angle
 
-        dif_angle = angle - sf.orientation
+        sf_mag = sqrt(sf.position_x ** 2 + sf.position_y ** 2) # convert the sf position into cylindrical coords
 
-        print("Distance:", dist, "angle:", angle, "error:", dif_angle)
+        dif_angle = angle - sf.orientation  # calculate the angular difference
+        dif_dist = dist - sf_mag  # calculate the linear difference
 
-        if dist > 3:  # 3m is the tolerance of the gps
-            if abs(dif_angle) > 1:  # 1 degree of tolerance (car can't steer to that accuracy anyways)
-                car.steering_angle = dif_angle
-                car.motor_speed = 50
-            else:
-                # drive straight
-                car.steering_angle = 0
-                car.motor_speed = 100
-        else:
-            print("Done")
-            car.motor_speed = 0
+        # output is proportional to dif calcs, (props, have saturation implemented)
+        car.steering_angle = dif_angle
+        car.motor_speed = dif_dist
+
+        print("dist:", dif_dist, "angle:", dif_angle, "correction vector:", correction)
+
+        if dif_dist < 1:
+            print("Reached destination")
             car.stop_thread()
             sf.stop_thread()
             return
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
         print("Stopping")
-
-
