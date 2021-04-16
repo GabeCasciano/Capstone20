@@ -79,7 +79,7 @@ class Obstacle_Avoidance:
         return math.sqrt(math.pow((self.x_dest - self.x_ref), 2) + math.pow(self.y_dest - self.y_ref), 2)
 
     def theta(self):
-        return abs(math.radians(math.atan((self.y_dest - self.y_ref) / (self.x_dest - self.x_ref))))  # optimal travelling angle
+        return abs(math.atan((self.y_dest - self.y_ref) / (self.x_dest - self.x_ref)))  # optimal travelling angle
 
     @property
     def orientation_angle(self):
