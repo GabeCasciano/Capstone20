@@ -1,7 +1,9 @@
+import copy
+
 from Autonomous.Modules.Sensor_Fusion import Sensor_Fusion
+import math
 
 class Path_Planning:
-    SF = Sensor_Fusion()
 
     # These are arbitrary values that need to be calibrated
     max_velocity = 100
@@ -10,14 +12,18 @@ class Path_Planning:
     path_radius = 0
     seek_offset = 3
     
-    def __init__(self, lng, lat):
+    def __init__(self, lng, lat, sf: Sensor_Fusion):
+        self.__SF = sf
+        if not self.__SF.running:
+            self.__SF.start()
+
         self._correction_vector = [0,0]
 
         self.destination_lng = lng
         self.destination_lat = lat
 
-        self.initial_lng = self.SF.gps_longitude()
-        self.initial_lat = self.SF.gps_latitude()
+        self.initial_lng = self.__SF.gps_longitude
+        self.initial_lat = self.__SF.gps_latitude
 
         self.path = Path(self.initial_lng, self.initial_lat, self.destination_lng, self.destination_lat)
 
@@ -28,14 +34,14 @@ class Path_Planning:
     def follow_path(self):
         dest = self.get_destination() #relative destination
         
-        v = SF.velocity_vector()
+        v = self.__SF.velocity_vector
         self.velocity = Point(v[0], v[1]) #saving velocity as point vector
 
         current_location = self.get_location()
         print("Current Location: ", self.print_point(current_location))
 
         # Add arival check here
-        
+
         
         future_location = self.predict_location(current_location.x, current_location.y)
         print("Future Location: ", self.print_point(future_location))
@@ -83,7 +89,7 @@ class Path_Planning:
 
 
     def get_location(self):
-        location_p = self.path.get_relative_point(self.SF.gps_longitude(), self.SF.gps_latitud())
+        location_p = self.path.get_relative_point(self.SF.gps_longitude, self.SF.gps_latitude)
         return location_p
 
 
@@ -156,27 +162,27 @@ class Path:
 
     def __init__(self, current_lng, current_lat, dest_lng, dest_lat):
         self.segments = []
-        self.destination_lng = dest_lng
-        self.destination_lat = dest_lat
-        self.initial_lng = current_lng
-        self.initial_lat = current_lat
+        self._dest_long = dest_lng
+        self._dest_lat = dest_lat
+        self._initial_lng = current_lng
+        self._initial_lat = current_lat
 
-        relative_destination = self.get_relative_point(self.destination_lat, self.destination_lng)
-        relative_initial_point = self.get_relative_point(self.initial_lat, self.initial_lng)
+        relative_destination = self.get_relative_point(self._dest_lat, self._dest_long)
+        relative_initial_point = self.get_relative_point(self._initial_lat, self._initial_lng)
         
         initial_segment = Segment(relative_initial_point, relative_destination)
         self.segments.append(initial_segment)
 
 
     def get_slope(self, desired_lng, desired_lat):
-        m = (desired_lng-self.initial_lng)/(desired_lat-self.initial_lat)
+        m = (desired_lng - self._initial_lng) / (desired_lat - self._initial_lat)
         return m
 
 
     def get_relative_point(self, lng, lat):
         #setting initial position to (0,0) all points will be measured relative to this
-        rel_x = lat - self.initial_lat
-        rel_y = lng - self.initial_lng
+        rel_x = lat - self._initial_lat
+        rel_y = lng - self._initial_lng
         return Point(rel_x, rel_y)
 
 
@@ -184,7 +190,7 @@ class Path:
         p = self.get_relative_point(lng, lat)
         i = 0
         for segment in self.segments:
-            if p.x > segment.p1.x and p.x < segment.p2.x:
+            if segment.p1.x < p.x < segment.p2.x:
                 # create and add new segment at this point
                 s1 = Segment(segment.p1, p)
                 s2 = Segment(p, segment.p2)
@@ -197,15 +203,15 @@ class Path:
 
             i += 1
 
-    def get_segments(self):
+    def get_segments(self) -> list:
         return self.segments
 
     @property
-    def destination_long(self):
+    def destination_long(self) -> float:
         return self._dest_long
 
     @property
-    def destination_lat(self):
+    def destination_lat(self) -> float:
         return self._dest_lat
 
     # @property
@@ -217,31 +223,29 @@ class Path:
     #     pass
 
 
-class Point():
+class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
-    def normalize():
-        mag = math.sqrt((self.x) ** 2 + (self.y) ** 2)
-         self.x = x / mag
-         self.y = y / mag
+    def normalize(self):
+        mag = math.sqrt(self.x ** 2 + self.y ** 2)
+         self.x = self.x / mag
+         self.y = self.y / mag
 
-    def mult(num):
+    def mult(self, num):
         self.x = self.x * num
         self.y = self.y * num
 
-    def sub(point):
+    def sub(self, point):
         self.x = self.x - point.x
         self.y = self.y - point.y
 
-    def add(point):
+    def add(self, point):
         self.x = self.x + point.x
         self.y = self.y + point.y
 
-
-
-class Segment(): 
+class Segment:
     def __init__(self, p1, p2):
         self.p1 = p1
         self.p2 = p2

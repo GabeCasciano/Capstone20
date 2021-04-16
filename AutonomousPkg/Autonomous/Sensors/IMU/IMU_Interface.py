@@ -85,7 +85,6 @@ class IMU_Interface(Thread):
         print("Angular pos bias: ", self._bias_angular_pos)
         print("Angular vel bias: ", self._bias_angular_vel)
 
-
     def __do_sample_rate(self):
         self._current_time = perf_counter()
         self._sample_rate = self._current_time - self._prev_time

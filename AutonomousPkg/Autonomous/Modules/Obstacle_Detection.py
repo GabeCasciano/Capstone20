@@ -8,6 +8,10 @@ class Obstacle_Detection(Thread):
     def __init__(self, lidar: LIDAR_Interface.LIDAR_Interface, min_distance: int=0, max_distance: int=5000):
 
         self._lidar = lidar
+
+        if not self._lidar.running:
+            self._lidar.start()
+
         self._iter_scan = self._lidar.iter_scans(self.__samples_per_rev)
         self._lidar.min_distance = min_distance
         self._lidar.max_distance = max_distance

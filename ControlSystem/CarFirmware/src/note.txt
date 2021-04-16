@@ -1,0 +1,16 @@
+pinout:
+2 - Right led
+3 - Left led
+6 - steering rev
+7 - steering fwd
+8 - motor en (active low)
+9 - motor rev
+10 - motor fwd
+
+A0 - current sense fwd
+A1 - current sense rev
+A2 - Motor battery 1
+A3 - Motor battery 2
+A4 - CS battery 1
+A5 - CS battery 2
+A6 - steering angle
