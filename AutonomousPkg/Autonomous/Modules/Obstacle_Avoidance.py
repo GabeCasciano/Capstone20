@@ -7,11 +7,15 @@ import math
 
 class Obstacle_Avoidance:
 
+    # Modules
+
     SF = Sensor_Fusion()
     Obs_Det = Obstacle_Detection()
     PP = Path()
 
     def __init__(self):
+
+        # Initializing
 
         self.__running = False
         self.x_ref = self.SF.gps_latitude
@@ -30,64 +34,59 @@ class Obstacle_Avoidance:
         # direction represents going to the left around the obstacle if false
         # uses the self.__running var to indicate that it is still running and to control the main while loop
 
-        __obstacle = np.asarray(__obstacle)
-        x_obs = __obstacle[:,0]
-        y_obs = __obstacle[:,1]
+        __obstacle = np.asarray(__obstacle) # from obstacle detection module
+        x_obs = __obstacle[:,0] # set col 1 as x- contains angle values
+        y_obs = __obstacle[:,1] # set col 2 as y- contains distance values
 
-        diff_x = abs(x_obs - self.x_ref)
+        diff_x = abs(x_obs - self.x_ref) # difference between obstacle coordinate and reference coordinate
         diff_y = abs(y_obs - self.y_ref)
 
-        diff_angle = self.x_ref - self.theta
+        diff_angle = self.x_ref - self.theta # difference between reference coordinate and current travelling angle
         max_dist = 200
 
         for j in range(0, len(y_obs)):
 
             if (diff_x > 20) and (diff_y > 20):  # obst not detected close by
                 for i in range(j, j + 1):
-                    if y_obs[j] > self.dist_dest:
+                    if y_obs[j] > self.dist_dest: # if obstacle is further away then destination
                         if diff_angle == 0:
-                            __orient_angle = self.theta
+                            __orient_angle = self.theta # if difference is 0, that means the bot is in the right angle
                         elif diff_angle > 0:
-                            __orient_angle = self.x_ref + diff_angle
+                            __orient_angle = self.x_ref + diff_angle # if difference is greater, shift orientation angle
                         elif diff_angle < 0:
-                            __orient_angle = self.x_ref - diff_angle
+                            __orient_angle = self.x_ref - diff_angle # if difference is less, shift orientation angle
                         __obstacle_flag = True
                     else:
                         __obstacle_flag= False
 
-                    # print("orient angle 1", orient_angle)
 
             elif (diff_x < 20) and (diff_y < 20):  # obs detected close by
-                # set temp path
-                alpha_temp = 90
-                alpha_temp = np.radians(alpha_temp)
+
+                alpha_temp = 90 # set temp path
+                alpha_temp = np.radians(alpha_temp) # set in radians
                 # __orient_angle_det = self.theta + alpha_temp might not need this?
 
                 diff_2 = alpha_temp - self.theta
                 if y_obs[j] > self.dist_dest:
                     if diff_2 > 0:
-                        __orient_angle = alpha_temp + diff_2
+                        __orient_angle = alpha_temp + diff_2 # if diff greater than 0, new orientation angle= (90+currentangle)to avoid obst
                     elif diff_2 < 0:
-                        __orient_angle = alpha_temp - diff_2
+                        __orient_angle = alpha_temp - diff_2 # if diff less than 0, new orientation angle=(90-current orientation angle) to avoid obst
                     __obstacle_flag = True
                 else:
                     __obstacle_flag = False
                 # print("orient angle 2", orient_angle2)
         pass
 
-    def dist_dest(self):
+    def dist_dest(self): # distance between destination coordinates and current reference coordinates
         return math.sqrt(math.pow((self.x_dest - self.x_ref), 2) + math.pow(self.y_dest - self.y_ref), 2)
 
-    def theta(self):
-        return abs(math.atan((self.y_dest - self.y_ref) / (self.x_dest - self.x_ref)))  # optimal travelling angle
+    def theta(self): # Optimal travelling angle
+        return abs(math.atan((self.y_dest - self.y_ref) / (self.x_dest - self.x_ref)))
 
     @property
-    def orientation_angle(self):
+    def orientation_angle(self): # orientation angle after obstacle avoidance runs
         return self.__orient_angle
-
-    #@property
-    #def orientation_angle_det(self):
-     #   return self.__orient_angle_det
 
     @property #this needs to be changed
     def obstacle_detected_flag(self):
@@ -98,11 +97,7 @@ class Obstacle_Avoidance:
     @property
     def running(self):
         while self.__running:
-
-            # need to be fixed
-
             avoid_obs = self.avoid_obstacle(self, self.__obstacle, self.__obstacle_flag, __orient_angle)
-
         return
 
     @property

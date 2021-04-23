@@ -1,11 +1,14 @@
 import numpy
 import numpy as np
-from Autonomous.Sensors.LIDAR import LIDAR_Interface,Utils
+from Autonomous.Sensors.LIDAR import LIDAR_Interface, Utils
 from threading import *
+
 
 class Obstacle_Detection(Thread):
 
-    def __init__(self, lidar: LIDAR_Interface.LIDAR_Interface, min_distance: int=0, max_distance: int=5000):
+    def __init__(self, lidar: LIDAR_Interface.LIDAR_Interface, min_distance: int = 0, max_distance: int = 5000):
+
+        # Initializing functions
 
         self._lidar = lidar
 
@@ -20,51 +23,44 @@ class Obstacle_Detection(Thread):
 
         self.__running = False
         self.__obstacle_flag = False
-        self.__obstacle = np.array([0,0]) # this can be an np array if need be
+        self.__obstacle = np.array([0, 0])  # this can be an np array if need be
 
-
-    def stop_thread(self):
+    def stop_thread(self):  # Lidar interface thread
         self.__running = True
 
-    def exit_func(self):
+    def exit_func(self):  # Exit lidar and stop running obstacle det
         self.stop_thread()
         self._lidar.exit_func()
-
-    def zero_sensor(self):
-        # needs an algorithm to find the center of the sensor
-        pass
 
     def clear_obstacle_flag(self):
         self.__obstacle_flag = False
         self.__obstacle = (0, 0)  # reset the __obstacle var
 
-
-    def range_filter(self, scans, min_distance, max_distance): # not sure if there needs to be a self here?
+    def range_filter(self, scans, min_distance, max_distance):  # Range filter: excludes values of obstacles outside the range
         x = scans[:, 1]
         for i in range(len(x)):
-            if x[i] < min_distance:
+            if x[i] < min_distance: # min distance: 0
                 x[i] = 0
-            elif x[i] > max_distance:
+            elif x[i] > max_distance: # max distance: 5000mm
                 x[i] = 0
-
-        x = np.asarray(x)
-        x = np.transpose(x)
+            # only considers values between this range: 0-5000
+        x = np.asarray(x) # save as np array
+        x = np.transpose(x) # transpose
         return x
 
-
-    def segmentation(self, scans, seg_threshold): # not sure if there needs to be a self here?
+    def segmentation(self, scans, seg_threshold):  # not sure if there needs to be a self here?
         i = 1  # incremental num
-        temp_val = scans[:, 1]
+        temp_val = scans[:, 1] # temporary array that holds distance values from lidar
         segment = np.zeros((len(temp_val), 3))
         segment[:, 0] = temp_val
         x = [temp_val[len(temp_val) - 1]]
         np.asarray(x)
-        temp_val = np.append(temp_val, x, axis=0)
+        temp_val = np.append(temp_val, x, axis=0) # append distance values
         segment[:, 1] = abs(np.diff(temp_val, axis=0))
-        # conditions where segment threshold > 20 mm, can be changed
-        cond_1 = segment[:, 1] > seg_threshold
+        # conditions where segment threshold > 20 mm, this value can be changed
+        cond_1 = segment[:, 1] > seg_threshold # check if difference between 2 dist values is > threshold
         check = np.where(cond_1, 2, 1)  # check where its true or false
-        check = check.reshape(-1, 1)
+        check = check.reshape(-1, 1) # reshape array
         iter_seg = 1
         for k in range(len(check)):
             if check[k] == 2:  # true
@@ -78,29 +74,26 @@ class Obstacle_Detection(Thread):
 
         return segment
 
-    # class properties
-    # @property
-    # def obstacle_detected_flag(self):
-    #     return self.__obstacle_flag
+    # properties
 
     @property
-    def detected_obstacle(self): # returns [angle, dist, segment number]
+    def detected_obstacle(self):  # returns [angle, dist, segment number]
         return self.__obstacle
 
     @property
-    def max_distance(self):
+    def max_distance(self): # set max distance
         return self._lidar.max_distance
 
     @max_distance.setter
-    def max_distance(self, distance):
+    def max_distance(self, distance): # set max distance
         self._lidar.max_distance = distance
 
     @property
-    def min_distance(self):
+    def min_distance(self): # set min distance
         return self._lidar.min_distance
 
     @min_distance.setter
-    def min_distance(self, distance):
+    def min_distance(self, distance): # set min distance
         self._lidar.min_distance = distance
 
     # thread functions
@@ -112,16 +105,13 @@ class Obstacle_Detection(Thread):
     def run(self) -> None:
         while self.__running:
             # run the obstacle detection algorithm
-
-            scan = next(self._iter_scan)
-            __obstacle = np.array([(np.radians(point[1]), point[2]) for point in scan])
-            x = self.range_filter(__obstacle, 0, 5000)
-            __obstacle[:, 1] = x
+            scan = next(self._iter_scan) # iterator
+            __obstacle = np.array([(np.radians(point[1]), point[2]) for point in scan]) # gets the data from lidar
+            x = self.range_filter(__obstacle, 0, 5000) # call range filter function
+            __obstacle[:, 1] = x # set row 1 in the array as x
             __obstacle = __obstacle[np.all(__obstacle != 0, axis=1)]  # removes rows with 0s
             segment = self.segmentation(__obstacle, 20)  # distance threshold function
             # add segment value column to offset array to plot
-            __obstacle = np.append(__obstacle, segment, axis=1)
+            __obstacle = np.append(__obstacle, segment, axis=1) # append angle, distance and segment# into array
 
             pass
-
-
