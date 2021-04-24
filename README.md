@@ -8,6 +8,8 @@ An autonomous subsystem for a self-driving vehicle. Included in this project are
 
 ## Project Structure
 
+Outlined below is the structure of this repository and locations and purpose of each file, in the directories containing the specific files and the intermediary directories as well there are more files similar to this one which cover the specific files in more detail. Use this project structure below as a map for navigating through this repository.
+
 - **AutonomousPkg**: The custom python package written for this project.
   - **Autonomous**: The top-level directory for the python package.
     - **Modules**: Contains all of the high-level algorithms required for this project.
@@ -82,3 +84,31 @@ cd Capstone20/
 ./setup.sh
 ```
 
+
+
+## Running
+
+After everything has been installed into the local python environment, running is as simple as calling the files, there are 2 ways in which this can be done
+
+**Option 1**:
+
+This option will run the run-time algorithm from the version installed in the local python environment
+
+```bash
+python3 -m Autonomous.Run.FullAuto
+```
+
+**Option 2**:
+
+This option will run the run-time algorithm directly from the script itself:
+
+```bash
+cd Capstone20/AutonomousPkg/Autonomous/Run
+python3 FullAuto.py
+```
+
+
+
+## Extending this package
+
+Should you desire to fork this repository to continue our work or implement you own run-time algorithms, simply put the .py file in the folder `Capstone20/AutonomousPkg/Autonomous/Run`. Although technically the run-time algorithms can be run from any directory on your computer as the package installed in the local python environment, if the files are included in the *Run* directory they can be executed using the method provided in **Option 1** above.
