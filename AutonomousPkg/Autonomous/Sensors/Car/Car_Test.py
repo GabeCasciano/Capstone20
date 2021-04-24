@@ -2,7 +2,7 @@ from Autonomous.Sensors.Car.Car_Interface import Car_Interface
 import time
 
 if __name__ == "__main__":
-    car = Car_Interface(loc='/dev/ttyUSB0')
+    car = Car_Interface(loc='/dev/ttyUSB1')
 
     car.start()
 
@@ -29,15 +29,25 @@ if __name__ == "__main__":
     car.flash_led()
     time.sleep(3)
 
-    for i in range(-128, 128):
-        car.motor_speed = i
-        time.sleep(.25)
-        print("Motor speed:", i)
+    car.steering_angle = 0;
 
-    for i in range(0, 128):
-        car.motor_speed = 128 - i
+    # for i in range(0, 128):
+    #     car.motor_speed = i
+    #     time.sleep(.25)
+    #     print("Motor speed:", i)
+
+
+    for i in range(-60, 60):
+        car.steering_angle = i
         time.sleep(.25)
-        print("Motor speed:", 128 - i)
+        print("steer angle", i)
+
+    for i in range(-60, 60):
+        car.steering_angle = -i
+        time.sleep(.25)
+        print("steer angle:", -i)
+
+    car.steering_angle = 0;
 
     # speed = 125
     # print("Setting motor speed:", speed)

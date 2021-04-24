@@ -58,7 +58,7 @@ class Car_Interface(Thread):
         if angle <= Car_Interface._MIN_ANGLE:
             self.__steering_angle = Car_Interface._MIN_ANGLE
 
-        txt = Car_Interface._S_CMD + str(self.__steering_angle) + self._BOOL_T
+        txt = Car_Interface._S_CMD + str(self.__steering_angle)
         self.__serial.write(txt.encode(encoding="ASCII"))
 
     @property
