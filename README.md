@@ -41,7 +41,7 @@ Outlined below is the structure of this repository and locations and purpose of 
         - **LIDAR_Vis.py**: This file is used to visualise the data that the LIDAR  produces.
   - **build.sh** & **clear.sh**: These two scripts can be used to build the python package, and clear a pre-installed version of the package from the python environment.
   - misc. build and distribution files.
-- **ControlSystem**: The PCB and software designed and written to test the implementation of our algorithms on a vehicle.
+- **ControlSystem**: The PCB and software designed and written to test the implementation of our algorithms on a vehicle. This folder also includes all of the mechanical components that were designed for use with the specific car that used during the testing and implementation of this project.
 - **Documents**: Implementation notes, diagrams, and documentation.
 - **setup.sh**: This script can be used to install the required python packages into a python environment.
 
