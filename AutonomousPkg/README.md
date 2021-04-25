@@ -1,6 +1,10 @@
 # Autonomous Robot Sensors Package
 
+------
+
 This package contains all of the software and sensor interfaces required for a simple path following and obstacle detecting and avoiding robotic vehicle. The structure of the package is outlined below, however not outlined are the additional directories included in this package which include the build files as well as the distributable python package in both *whl* and *tar* formats, as well as a handful of scripts required to build and install the python package as well as clean the python environment if a version has already been installed.
+
+------
 
 **Autonomous**: The top-level directory for the python package.
 
