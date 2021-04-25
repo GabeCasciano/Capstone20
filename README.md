@@ -1,12 +1,8 @@
 # Capstone20
 
-<<<<<<< HEAD
-------
-
-By: Gabriel Casciano, Niha Shetty, Yasamin Ahmadzadeh, Mai Abdelhameed
-=======
 By: Gabriel Casciano, Niharika Shetty, Yasamin Ahmadzadeh, Mai Abdelhameed
->>>>>>> e843d3316ff9fec0db8d16fd0e9fe714e47466f5
+
+------
 
 An autonomous subsystem for a self-driving vehicle. Included in this project are the required software to interface with all of the autonomous sensors, algorithms and feedback loops which utilise the data from the sensors, and the different run-time applications which choose the specific algorithms for the given mode. 
 
