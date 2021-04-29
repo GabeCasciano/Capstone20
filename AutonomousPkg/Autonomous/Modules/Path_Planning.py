@@ -5,6 +5,8 @@ import math
 
 class Path_Planning:
 
+    hasArrived = False
+
     # These are arbitrary values that need to be calibrated
     max_velocity = 100
     max_acceleration = 100
@@ -28,9 +30,6 @@ class Path_Planning:
         self.path = Path(self.initial_lng, self.initial_lat, self.destination_lng, self.destination_lat)
 
 
-    # def __init__(self, dest_long: float, dest_lat: float):
-    #     self._correction_vector = [0,0]
-
     def follow_path(self):
         dest = self.get_destination() #relative destination
         
@@ -38,10 +37,7 @@ class Path_Planning:
         self.velocity = Point(v[0], v[1]) #saving velocity as point vector
 
         current_location = self.get_location()
-        print("Current Location: ", self.print_point(current_location))
-
-        # Add arival check here
-
+        print("Current Location: ", self.print_point(current_location))        
         
         future_location = self.predict_location(current_location.x, current_location.y)
         print("Future Location: ", self.print_point(future_location))
@@ -57,13 +53,17 @@ class Path_Planning:
         if dist >= self.path_radius:
             
             correction_vector = self.get_correction_vector(current_location, normal_point, segment) 
-            
             return correction_vector
 
+        else:
+            return [0,0]
+
+
     def predict_location(self, current_x, current_y):
-        velocity_n = Point(self.velocity.x, self.velocity.y).normalize #normalize the velocity
-        
-        predict = copy.deepcopy(velocity_n)
+        velocity_n = Point(self.velocity.x, self.velocity.y) 
+        velocity_n.normalize() #normalize the velocity
+
+        predict = Point(velocity_n.x, velocity_n.y)
         predict.mult(self.look_ahead_factor) #this can be calibrated to meters / distance if needed
 
         future_point = Point(current_x + predict.x, current_y + predict.y)
@@ -83,13 +83,13 @@ class Path_Planning:
         return 0
 
 
-    def get_destination(self):
+    def get_destination(self): # get destination in relative coordinates
         destination_p = self.path.get_relative_point(self.destination_lng, self.destination_lat)
         return destination_p
 
 
-    def get_location(self):
-        location_p = self.path.get_relative_point(self.SF.gps_longitude, self.SF.gps_latitude)
+    def get_location(self): # get current location in relative coordinates
+        self.path.get_relative_point(self.SF.gps_longitude, self.SF.gps_latitude)
         return location_p
 
 
@@ -99,16 +99,17 @@ class Path_Planning:
         for segment in self.path.get_segments():
             start_p = segment.p1
             end_p = segment.p2
-            m_segment = (end_p.y - start_p.y) / (end_p.x - start_p.x)
 
-            m_normal = -1 * (1/m_segment)
-            b_normal = future_p.y - m_normal * future_p.x
+            start_to_future = Point(future_p.x - start_p.x, future_p.y - start_p.y)
+            start_to_end = Point(end_p.x - start_p.x, end_p.y - start_p.y)
+            start_to_end.normalize()
 
-            x = (b_normal) / (m_segment - m_normal)
-            y = m_segment * x # this will only work on original segment!
+            dot = start_to_future.x * start_to_end.x + start_to_future.y * start_to_end.y
+            start_to_end.mult(dot)
 
+            temp_normal_point = Point(start_to_end.x + start_p.x, start_to_end.y + start_p.y)
             # add check for if point is on segment
-            temp_normal_point = Point(x,y)
+
 
             # need segment with shortest normal distance
             dist = math.sqrt((future_p.x - temp_normal_point.x) ** 2 + (future_p.y - temp_normal_point.y) ** 2)
@@ -137,11 +138,21 @@ class Path_Planning:
         print("Target Point: " + self.print_point(target))
 
         desired = Point(target.x - current_p.x, target.y - current_p.y)
+        desired_mag = desired.mag()
         desired.normalize()
-        desired.mult(self.max_velocity)
+
+        # arriving behaviours - slow down when close to target -> fix logic here
+        # distance_threshold = 10 #Calibrate this!!
+        # if desired_mag < distance_threshold:
+        #     factor = distance_threshold / desired_mag * self.max_velocity
+        #     desired.mult(factor)
+        # else:
+        #     desired.mult(self.max_velocity)
 
         correction_vector = Point(desired.x - self.velocity.x, desired.y - self.velocity.y)
-        return [correction_vector.x, correction_vector.y]
+        
+        self._correction_vector = [correction_vector.x, correction_vector.y]
+        return self._correction_vector
 
 
     def print_point(self, p):
@@ -170,6 +181,7 @@ class Path:
         relative_destination = self.get_relative_point(self._dest_lat, self._dest_long)
         relative_initial_point = self.get_relative_point(self._initial_lat, self._initial_lng)
         
+        # initially creates path with only 2 points, waypoints can be added to path through path planning
         initial_segment = Segment(relative_initial_point, relative_destination)
         self.segments.append(initial_segment)
 
@@ -230,8 +242,8 @@ class Point:
 
     def normalize(self):
         mag = math.sqrt(self.x ** 2 + self.y ** 2)
-         self.x = self.x / mag
-         self.y = self.y / mag
+        self.x = self.x / mag
+        self.y = self.y / mag
 
     def mult(self, num):
         self.x = self.x * num
@@ -245,7 +257,11 @@ class Point:
         self.x = self.x + point.x
         self.y = self.y + point.y
 
-class Segment:
+    def mag(self):
+        return math.sqrt((self.x) ** 2 + (self.y) ** 2)
+
+
+class Segment: 
     def __init__(self, p1, p2):
         self.p1 = p1
         self.p2 = p2
@@ -255,3 +271,9 @@ class Segment:
 
     def get_len(self):
         return(math.sqrt((self.p2.x - self.p1.x) ** 2 + (self.p2.y - self.p1.y) ** 2))
+
+
+# path = Path_Planning(15,-5)
+# correction_velocity_vector = path.follow_path() # follow path
+
+# print("Correction vector: ", correction_velocity_vector)
